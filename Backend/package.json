@@ -1,7 +1,12 @@
 {
-   "scripts": {
-  "start": "nodemon server.js"
-},
+  "name": "healthcare-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "nodemon server.js"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
