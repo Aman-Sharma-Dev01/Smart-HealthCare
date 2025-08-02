@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HospitalDashboard from './Components/HospitalDashboard/HospitalDashboard';
 import HomePage from './Components/HomePage/HomePage';
+import PrescriptionUploader from './Components/PrescriptionUploader/PrescriptionUploader';
+
 
 const App = () => {
   return (
@@ -10,7 +12,7 @@ const App = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/dashboard" element={<HospitalDashboard />} />
       </Routes>
-    
+    // <PrescriptionUploader/>
   );
 };
 
