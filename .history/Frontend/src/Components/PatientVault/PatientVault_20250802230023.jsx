@@ -22,8 +22,7 @@ const PatientVault = () => {
 
       <div className="qr-section">
         <h3>Your Unique QR Code</h3>
-       <QRCode value={`https://yourserver.com/patient/${patientId}`} />
-
+        <QRCode value={`https://yourserver.com/patient/${patientId}`} size={160} />
         <p className="note">
           Doctors can scan this QR code to access your verified medical records instantly.
         </p>

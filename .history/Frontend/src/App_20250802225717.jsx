@@ -14,7 +14,6 @@ const App = () => {
       //   <Route path="/dashboard" element={<HospitalDashboard />} />
       // </Routes>
     // <PrescriptionUploader/>
-     <PatientVault/>
   );
 };
 
