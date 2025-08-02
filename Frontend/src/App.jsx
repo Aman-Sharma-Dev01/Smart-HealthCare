@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as  Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import HospitalDashboard from './Components/HospitalDashboard/HospitalDashboard';
 import HomePage from './Components/HomePage/HomePage';
 
