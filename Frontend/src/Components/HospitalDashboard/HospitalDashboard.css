@@ -1,0 +1,163 @@
+.dashboard {
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f6fa;
+  min-height: 100vh;
+  color: #333;
+}
+
+h1 {
+  text-align: center;
+  font-size: 2.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.subheading {
+  text-align: center;
+  font-size: 1rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.status-box {
+  background: white;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.05);
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.status-box h3 {
+  font-size: 1.2rem;
+  color: #007bff;
+}
+
+.live-dot {
+  display: inline-block;
+  background: red;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-left: 8px;
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.current-number {
+  font-size: 3rem;
+  margin: 0.3rem 0;
+  color: #000;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 2rem;
+}
+
+.stat {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 1rem 2rem;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.stat h2 {
+  font-size: 2rem;
+  margin: 0;
+  color: #28a745;
+}
+
+.main-content {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2rem;
+}
+
+.queue {
+  flex: 1.2;
+  min-width: 280px;
+}
+
+.queue h3 {
+  font-size: 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.queue-card {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  box-shadow: 0 0 8px rgba(0,0,0,0.05);
+}
+
+.queue-card.active {
+  border-left: 6px solid #007bff;
+  background-color: #eaf4ff;
+}
+
+.queue-number {
+  background: #007bff;
+  color: white;
+  font-weight: bold;
+  padding: 0.7rem;
+  border-radius: 0.5rem;
+  margin-right: 1rem;
+  width: 3rem;
+  text-align: center;
+}
+
+.actions {
+  flex: 1;
+  min-width: 250px;
+}
+
+.actions h3 {
+  margin-bottom: 1rem;
+}
+
+.blue-btn,
+.green-btn,
+.add-btn {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.blue-btn {
+  background: #007bff;
+  color: white;
+}
+
+.green-btn {
+  background: #28a745;
+  color: white;
+}
+
+.add-btn {
+  background: #6c757d;
+  color: white;
+}
+
+input[type='text'] {
+  width: 100%;
+  padding: 0.7rem;
+  margin-bottom: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #ccc;
+}

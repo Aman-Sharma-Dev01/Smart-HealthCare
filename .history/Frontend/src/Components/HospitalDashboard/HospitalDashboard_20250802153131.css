@@ -1,0 +1,175 @@
+.dashboard {
+  font-family: 'Segoe UI', sans-serif;
+  background: #eef9ff;
+  padding: 2rem;
+  color: #333;
+}
+
+h1 {
+  text-align: center;
+  color: #018749;
+  margin-bottom: 0.3rem;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.status-section {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+
+.current-status {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #ddd;
+  flex: 1;
+  min-width: 250px;
+  margin-right: 1rem;
+}
+
+.live {
+  color: green;
+  font-weight: bold;
+  font-size: 0.8rem;
+  margin-left: 0.4rem;
+}
+
+.now-diagnosed {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #666;
+}
+
+.current-status h2 {
+  font-size: 3rem;
+  color: #018749;
+  margin: 1rem 0 0.3rem 0;
+}
+
+.stats {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex: 1;
+  justify-content: space-around;
+}
+
+.stat-box {
+  background: white;
+  padding: 1rem;
+  flex: 1;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 1.5rem;
+  box-shadow: 0 0 10px #ddd;
+}
+
+.stat-box span {
+  display: block;
+  font-size: 0.9rem;
+  color: #555;
+  margin-top: 0.3rem;
+}
+
+.queue-actions {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.queue-status {
+  background: white;
+  flex: 2;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #ddd;
+}
+
+.queue-status h3 {
+  margin-bottom: 1rem;
+}
+
+.queue-status ul {
+  list-style: none;
+  padding: 0;
+}
+
+.queue-status li {
+  background: #f3f7fa;
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.queue-status li.active {
+  background: #dffaf1;
+  border-left: 4px solid #018749;
+}
+
+.token {
+  font-weight: bold;
+  font-size: 1.3rem;
+  color: #018749;
+}
+
+.info strong {
+  display: block;
+  font-size: 1.1rem;
+}
+
+.info span {
+  color: #666;
+  font-size: 0.85rem;
+}
+
+.quick-actions {
+  background: white;
+  flex: 1;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 0 10px #ddd;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.btn {
+  padding: 0.6rem 1rem;
+  border: none;
+  border-radius: 6px;
+  background: #e1f5fe;
+  color: #00796b;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn.checkin {
+  background: #e3f2fd;
+}
+
+.btn.call {
+  background: #018749;
+  color: white;
+}
+
+.btn.add {
+  background: #4caf50;
+  color: white;
+}
+
+input {
+  padding: 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
