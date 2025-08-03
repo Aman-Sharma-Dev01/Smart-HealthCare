@@ -10,10 +10,10 @@ import CovidQA from './Components/CovidQA/CovidQA';
 const App = () => {
   return (
 
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/dashboard" element={<HospitalDashboard />} />
-      </Routes>
+      // <Routes>
+      //   <Route path="/" element={<HomePage />} />
+      //   <Route path="/dashboard" element={<HospitalDashboard />} />
+      // </Routes>
     // <PrescriptionUploader/>
     //  <PatientVault/>
     // <CovidQA/>
