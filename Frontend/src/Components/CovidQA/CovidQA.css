@@ -1,0 +1,72 @@
+.qa-container {
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 25px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+  font-family: "Segoe UI", sans-serif;
+  text-align: center;
+}
+
+.qa-container h2 {
+  margin-bottom: 20px;
+  color: #2c3e50;
+}
+
+.qa-container textarea,
+.qa-container input {
+  width: 100%;
+  padding: 12px;
+  margin: 15px 0;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+}
+
+.qa-container textarea {
+  height: 120px;
+  resize: vertical;
+}
+
+.qa-container button {
+  background-color: #007bff;
+  color: white;
+  padding: 12px 25px;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.qa-container button:disabled {
+  background-color: #7ca8e7;
+  cursor: not-allowed;
+}
+
+.answer-box {
+  margin-top: 25px;
+  font-size: 1.1rem;
+  color: #333;
+  background: #eef6ff;
+  padding: 15px;
+  border-radius: 8px;
+  border: 1px solid #cce4ff;
+}
+
+
+
+/* CovidQA.css */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}

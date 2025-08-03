@@ -4,6 +4,7 @@ import HospitalDashboard from './Components/HospitalDashboard/HospitalDashboard'
 import HomePage from './Components/HomePage/HomePage';
 import PrescriptionUploader from './Components/PrescriptionUploader/PrescriptionUploader';
 import PatientVault from './Components/PatientVault/PatientVault';
+import CovidQA from './Components/CovidQA/CovidQA';
 
 
 const App = () => {
@@ -14,7 +15,9 @@ const App = () => {
       //   <Route path="/dashboard" element={<HospitalDashboard />} />
       // </Routes>
     // <PrescriptionUploader/>
-     <PatientVault/>
+    //  <PatientVault/>
+    <CovidQA/>
+
   );
 };
 
