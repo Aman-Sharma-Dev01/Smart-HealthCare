@@ -4,12 +4,12 @@ export const uploadRecord = async (req, res) => {
   const { title, recordType } = req.body;
   const patientId = req.user.id;
 
-  if (!title || !recordType) {
-    return res.status(400).json({ message: 'Title and Record Type are required' });
-  }
-
   if (!req.file) {
     return res.status(400).json({ message: 'Please upload a file' });
+  }
+  // Check for upload error from middleware
+  if (req.file.cloudStorageError) {
+    return res.status(500).json({ message: 'Error uploading to cloud storage.' });
   }
 
   try {
@@ -17,7 +17,7 @@ export const uploadRecord = async (req, res) => {
       patientId,
       title,
       recordType,
-      filePath: req.file.path,
+      filePath: req.file.gcsUrl, // <-- Use the public URL from GCS middleware
     });
     res.status(201).json(newRecord);
   } catch (error) {
@@ -25,6 +25,7 @@ export const uploadRecord = async (req, res) => {
   }
 };
 
+// getMyRecords function remains the same
 export const getMyRecords = async (req, res) => {
   try {
     const records = await Record.find({ patientId: req.user.id }).sort({ createdAt: -1 });

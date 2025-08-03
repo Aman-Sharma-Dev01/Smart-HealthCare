@@ -1,38 +1,64 @@
 import multer from 'multer';
+import { Storage } from '@google-cloud/storage';
 import path from 'path';
+import { fileURLToPath } from 'url';
 
-// Set up storage engine
-const storage = multer.diskStorage({
-  destination: './uploads/',
-  filename: function(req, file, cb) {
-    // Create a unique filename: fieldname-timestamp.extension
-    cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
-  }
+// --- Google Cloud Storage Configuration ---
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const storage = new Storage({
+  keyFilename: path.join(__dirname, '..', 'gcs-credentials.json'),
+  projectId: 'alpine-aspect-459412-p7', // Replace with your Google Cloud Project ID
 });
 
-// Initialize upload variable
-const upload = multer({
-  storage: storage,
-  limits: { fileSize: 5000000 }, // Limit file size to 5MB
-  fileFilter: function(req, file, cb) {
-    checkFileType(file, cb);
-  }
+const bucketName = 'healthcare-app-report'; // Replace with your GCS bucket name
+const bucket = storage.bucket(bucketName);
+
+// --- Multer Configuration ---
+// We use memoryStorage to temporarily hold the file before uploading to GCS
+const multerStorage = multer.memoryStorage();
+
+const multerUpload = multer({
+  storage: multerStorage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
 });
 
-// Check file type function
-function checkFileType(file, cb) {
-  // Allowed extensions
-  const filetypes = /jpeg|jpg|png|pdf/;
-  // Check extension
-  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-  // Check mime type
-  const mimetype = filetypes.test(file.mimetype);
-
-  if (mimetype && extname) {
-    return cb(null, true);
-  } else {
-    cb('Error: Images or PDFs Only!');
+/**
+ * Middleware to upload a file to Google Cloud Storage.
+ * This should be placed after multerUpload.single('fieldname').
+ */
+const uploadToGCS = (req, res, next) => {
+  if (!req.file) {
+    return next(); // If no file, skip to the next middleware
   }
-}
 
-export default upload;
+  const gcsFileName = `${Date.now()}-${req.file.originalname}`;
+  const file = bucket.file(gcsFileName);
+
+  const stream = file.createWriteStream({
+    metadata: {
+      contentType: req.file.mimetype,
+    },
+    resumable: false,
+  });
+
+  stream.on('error', (err) => {
+    req.file.cloudStorageError = err;
+    next(err);
+  });
+
+  stream.on('finish', () => {
+    // Make the file public and get its URL
+    file.makePublic().then(() => {
+      req.file.gcsUrl = `https://storage.googleapis.com/${bucketName}/${gcsFileName}`;
+      next();
+    });
+  });
+
+  stream.end(req.file.buffer);
+};
+
+export { multerUpload, uploadToGCS };
