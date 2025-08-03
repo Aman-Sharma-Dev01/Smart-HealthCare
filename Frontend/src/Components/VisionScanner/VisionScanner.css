@@ -1,0 +1,181 @@
+/* VisionScanner.css - User-Friendly & Readable UI */
+
+/* Use a modern font and apply a calming background to the whole page */
+body {
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', sans-serif;
+  background-color: #f8f9fa;
+  color: #212529;
+}
+
+.vision-body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 40px 20px;
+}
+
+/* Main container with softer shadows and professional feel */
+.vision-container {
+  max-width: 700px;
+  width: 100%;
+  padding: 40px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  border: 1px solid #dee2e6;
+}
+
+/* Header section styling */
+.header {
+  margin-bottom: 30px;
+}
+
+.header-icon {
+  font-size: 42px;
+}
+
+.header h2 {
+  color: #343a40;
+  font-weight: 700;
+  font-size: 26px;
+  margin: 10px 0 5px;
+}
+
+.header p {
+  color: #6c757d;
+  font-size: 16px;
+  margin-bottom: 25px;
+  max-width: 450px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Custom file upload button styling */
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 25px;
+  padding: 20px;
+  border: 2px dashed #ced4da;
+  border-radius: 12px;
+  background-color: #f8f9fa;
+}
+
+input[type="file"] {
+  display: none;
+}
+
+.custom-file-upload {
+  background-color: #f8f9fa;
+  color: #007bff;
+  border: 1px solid #007bff;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.custom-file-upload:hover {
+  background-color: #007bff;
+  color: #ffffff;
+}
+
+.file-name {
+  color: #495057;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Main action button styling */
+.scan-button {
+  background: #007bff;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 15px 30px;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  width: 100%;
+  max-width: 400px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.2);
+}
+
+.scan-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+  background: #0069d9;
+}
+
+.scan-button:disabled {
+  background-color: #6c757d;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Container for loading, error, or results */
+.result-area {
+  margin-top: 30px;
+  min-height: 100px;
+}
+
+/* Readable explanation box */
+.explanation-box {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 12px;
+  padding: 25px;
+  text-align: left;
+}
+
+.explanation-text {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-size: 16px;
+  line-height: 1.7;
+  color: #343a40;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Placeholder and Error styling */
+.placeholder-text {
+  color: #6c757d;
+  background-color: #f8f9fa;
+  padding: 30px;
+  border-radius: 12px;
+  font-style: italic;
+}
+
+.error-message {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+  padding: 15px;
+  border-radius: 8px;
+  font-weight: 500;
+}
+
+/* Simple loading spinner animation */
+.loader {
+  border: 5px solid #e9ecef;
+  border-top: 5px solid #007bff;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+  margin: 20px auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
