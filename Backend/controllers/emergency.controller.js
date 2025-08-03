@@ -4,15 +4,14 @@ import Notification from '../models/notification.model.js';
 import User from '../models/user.model.js';
 
 export const createEmergencyAlert = async (req, res) => {
-  const { lat, lng, emergencyType } = req.body;
+  const { lat, lng, emergencyType, incidentType } = req.body; // <-- Add incidentType
   const userId = req.user.id;
 
-  if (!lat || !lng || !emergencyType) {
-    return res.status(400).json({ message: 'Latitude, longitude, and emergency type are required' });
+  if (!lat || !lng || !emergencyType || !incidentType) { // <-- Add incidentType to validation
+    return res.status(400).json({ message: 'Latitude, longitude, emergency type, and incident type are required' });
   }
 
   try {
-    // 1. Create the emergency alert
     const alertData = {
       userId,
       location: {
@@ -20,26 +19,31 @@ export const createEmergencyAlert = async (req, res) => {
         coordinates: [parseFloat(lng), parseFloat(lat)],
       },
       emergencyType,
+      incidentType, // <-- Add to data object
     };
+
     if (req.file) {
-      alertData.imagePath = req.file.path;
+      if (req.file.cloudStorageError) {
+        return res.status(500).json({ message: 'Error uploading image to cloud storage.' });
+      }
+      alertData.imagePath = req.file.gcsUrl;
     }
+
     const newAlert = await Emergency.create(alertData);
 
-    // 2. Find the single nearest hospital
     const nearestHospital = await Hospital.findOne({
       location: {
         $near: {
           $geometry: { type: 'Point', coordinates: [parseFloat(lng), parseFloat(lat)] },
-          $maxDistance: 20000, // 20km radius
+          $maxDistance: 20000,
         },
       },
     });
 
     if (nearestHospital) {
-      // 3. Create and send a notification to the nearest hospital
       const patient = await User.findById(userId);
-      const notificationMessage = `Emergency Alert: A case of '${emergencyType}' for patient ${patient.name} (${patient.phone}) near your location.`;
+      // Update the notification message to be more descriptive
+      const notificationMessage = `Emergency Alert: A case of '${incidentType}' (${emergencyType}) for patient ${patient.name} (${patient.phone}) near your location.`;
       
       const newNotification = await Notification.create({
         hospitalId: nearestHospital._id,
@@ -48,7 +52,6 @@ export const createEmergencyAlert = async (req, res) => {
         message: notificationMessage,
       });
 
-      // 4. Emit a real-time alert to the hospital's dashboard
       const io = req.app.get('socketio');
       const hospitalRoom = `hospital_emergency_${nearestHospital._id}`;
       io.to(hospitalRoom).emit('new-emergency', newNotification);
