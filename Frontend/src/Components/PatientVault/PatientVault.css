@@ -57,3 +57,30 @@
 .record-table tr:nth-child(even) {
   background-color: #f9f9f9;
 }
+
+
+.upload-form {
+  margin-bottom: 40px;
+  text-align: center;
+}
+
+.upload-form input[type="file"],
+.upload-form input[type="text"],
+.upload-form input[type="date"] {
+  margin: 10px auto;
+  display: block;
+  padding: 10px;
+  width: 80%;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.upload-form button {
+  padding: 10px 20px;
+  margin-top: 10px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
