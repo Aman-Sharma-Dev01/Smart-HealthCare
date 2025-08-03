@@ -9,20 +9,37 @@ const generateToken = (id) => {
 };
 
 export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, password, phone, role, hospitalName, designation } = req.body;
+
+  if (!name || !email || !password || !phone || !role) {
+    return res.status(400).json({ message: 'Please provide all required fields: name, email, password, phone, and role.' });
+  }
+
   try {
-    const userExists = await User.findOne({ email });
+    const userExists = await User.findOne({ $or: [{ email }, { phone }] });
     if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+      return res.status(400).json({ message: 'User with this email or phone already exists' });
     }
 
-    const user = await User.create({ name, email, password });
+    const userData = { name, email, password, phone, role };
+
+    if (role === 'doctor') {
+      if (!hospitalName || !designation) {
+        return res.status(400).json({ message: 'Hospital Name and Designation are required for doctors' });
+      }
+      userData.hospitalName = hospitalName;
+      userData.designation = designation;
+    }
+
+    const user = await User.create(userData);
 
     if (user) {
       res.status(201).json({
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
+        role: user.role,
         token: generateToken(user._id),
       });
     } else {
@@ -43,6 +60,8 @@ export const loginUser = async (req, res) => {
         _id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
+        role: user.role,
         token: generateToken(user._id),
       });
     } else {

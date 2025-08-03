@@ -2,70 +2,60 @@ import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import http from 'http';
-import helmet from 'helmet';
 import { Server } from 'socket.io';
 import 'dotenv/config';
-import qaRoutes from './routes/qa.routes.js'; 
 
-console.log('--- Checking Environment Variables ---');
-console.log('Value of GOOGLE_APPLICATION_CREDENTIALS:', process.env.GOOGLE_APPLICATION_CREDENTIALS);
-console.log('------------------------------------');
-
-
-// --- Import Routes ---
+// --- Import All Your Routes ---
 import authRoutes from './routes/auth.routes.js';
 import hospitalRoutes from './routes/hospital.routes.js';
 import appointmentRoutes from './routes/appointment.routes.js';
 import queueRoutes from './routes/queue.routes.js';
+import recordRoutes from './routes/record.routes.js'; // <-- NEW
+import emergencyRoutes from './routes/emergency.routes.js'; // <-- NEW
+import notificationRoutes from './routes/notification.routes.js';
 
-// --- 1. CONFIGURATION ---
-const config = {
-  port: process.env.PORT || 5000,
-  mongoURI: process.env.MONGO_URI,
-  clientURL: process.env.CLIENT_URL || "http://localhost:3000",
-};
-
-if (!config.mongoURI) {
-  console.error("FATAL ERROR: MONGO_URI is not defined.");
-  process.exit(1);
-}
-
-// --- 2. INITIALIZE APP & HTTP SERVER ---
+// --- 1. Initialize Express App ---
 const app = express();
-const server = http.createServer(app);
 
-// --- 3. MIDDLEWARE ---
-app.use(helmet()); // Set security-related HTTP headers
-app.use(cors({ origin: config.clientURL })); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Parse JSON request bodies
-app.use(express.urlencoded({ extended: true })); // Parse URL-encoded request bodies
-
-
-// Simple request logger for development
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  next();
-});
-
-// --- 4. DATABASE CONNECTION ---
-mongoose.connect(config.mongoURI)
+// --- 2. Database Connection ---
+mongoose.connect(process.env.MONGO_URI)
   .then(() => console.log('MongoDB Connected... 🔗'))
   .catch(err => {
     console.error(`MongoDB Connection Error: ${err.message}`);
     process.exit(1);
   });
 
-// --- 5. SOCKET.IO SETUP ---
+// --- 3. Middleware Setup ---
+app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:3000" }));
+app.use(express.json()); // for parsing application/json
+app.use(express.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
+
+// Serve static files from the 'uploads' directory
+app.use('/uploads', express.static('uploads')); // <-- NEW
+
+// --- 4. API Routes ---
+app.use('/api/auth', authRoutes);
+app.use('/api/hospitals', hospitalRoutes);
+app.use('/api/appointments', appointmentRoutes);
+app.use('/api/queues', queueRoutes);
+app.use('/api/records', recordRoutes); // <-- NEW
+app.use('/api/emergency', emergencyRoutes); // <-- NEW
+app.use('/api/notifications', notificationRoutes);
+
+// --- 5. HTTP Server & Socket.IO Setup ---
+const server = http.createServer(app);
+
 const io = new Server(server, {
   cors: {
-    origin: config.clientURL,
+    origin: process.env.CLIENT_URL || "http://localhost:3000",
     methods: ['GET', 'POST'],
   },
 });
 
-// Make `io` globally accessible in routes via `req.app.get('socketio')`
+// Make `io` accessible in your controllers via `req.app.get('socketio')`
 app.set('socketio', io);
 
+// --- 6. Socket.IO Connection Logic ---
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id} 🔌`);
 
@@ -73,44 +63,21 @@ io.on('connection', (socket) => {
     socket.join(roomId);
     console.log(`Socket ${socket.id} joined room: ${roomId}`);
   });
-  
-  socket.on('leave-queue-room', (roomId) => {
-    socket.leave(roomId);
-    console.log(`Socket ${socket.id} left room: ${roomId}`);
-  });
 
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);
   });
+  
+  socket.on('join-hospital-emergency-room', (hospitalId) => {
+    const hospitalRoom = `hospital_emergency_${hospitalId}`;
+    socket.join(hospitalRoom);
+    console.log(`Socket ${socket.id} joined emergency room: ${hospitalRoom}`);
+});
 });
 
-// --- 6. API ROUTES ---
-app.use('/api/auth', authRoutes);
-app.use('/api/hospitals', hospitalRoutes);
-app.use('/api/appointments', appointmentRoutes);
-app.use('/api/queues', queueRoutes);
-app.use('/api/ask', qaRoutes);
+// --- 7. Start the Server ---
+const PORT = process.env.PORT || 5000;
 
-// --- 7. ERROR HANDLING ---
-// Handle 404 - Not Found
-app.use((req, res, next) => {
-  const error = new Error(`Not Found - ${req.originalUrl}`);
-  res.status(404);
-  next(error);
-});
-
-// Global Error Handler
-app.use((err, req, res, next) => {
-  const statusCode = res.statusCode === 200 ? 500 : res.statusCode;
-  console.error(`[ERROR] ${statusCode} - ${err.message}`);
-  res.status(statusCode).json({
-    message: err.message,
-    // Provide stack trace only in development
-    stack: process.env.NODE_ENV === 'production' ? '🥞' : err.stack,
-  });
-});
-
-// --- 8. START SERVER ---
-server.listen(config.port, () => {
-  console.log(`Server is running on port ${config.port} 🚀`);
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT} 🚀`);
 });

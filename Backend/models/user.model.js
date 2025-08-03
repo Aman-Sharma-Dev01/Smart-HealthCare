@@ -1,20 +1,31 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
 
-const userSchema = new mongoose.Schema(
-  {
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true, lowercase: true },
-    password: { type: String, required: true },
+const userSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true, lowercase: true },
+  password: { type: String, required: true },
+  phone: { type: String, required: true, unique: true },
+  role: {
+    type: String,
+    enum: ['patient', 'doctor'],
+    default: 'patient',
   },
-  { timestamps: true }
-);
+  // --- Fields for Doctors only ---
+  hospitalName: {
+    type: String,
+    // This field is required only if the role is 'doctor'
+    required: function() { return this.role === 'doctor'; }
+  },
+  designation: {
+    type: String,
+    required: function() { return this.role === 'doctor'; }
+  }
+}, { timestamps: true });
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
+  if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
