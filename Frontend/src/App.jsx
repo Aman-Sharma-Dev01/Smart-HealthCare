@@ -5,6 +5,7 @@ import HomePage from './Components/HomePage/HomePage';
 import PrescriptionUploader from './Components/PrescriptionUploader/PrescriptionUploader';
 import PatientVault from './Components/PatientVault/PatientVault';
 import VisionScanner from './Components/VisionScanner/VisionScanner';
+import ChatBot from './Components/ChatBot/ChatBot';
 
 
 const App = () => {
@@ -16,7 +17,9 @@ const App = () => {
       // </Routes>
     // <PrescriptionUploader/>
     //  <PatientVault/>
-      <VisionScanner/>
+      // <VisionScanner/>
+
+      <ChatBot/>
     
 
   );
