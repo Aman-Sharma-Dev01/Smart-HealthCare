@@ -4,7 +4,6 @@ import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
 import 'dotenv/config';
-import fetch from 'node-fetch'; // <== Required for OpenRouter
 
 // --- Import All Your Routes ---
 import authRoutes from './routes/auth.routes.js';
@@ -14,7 +13,8 @@ import queueRoutes from './routes/queue.routes.js';
 import recordRoutes from './routes/record.routes.js';
 import emergencyRoutes from './routes/emergency.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
-import chatRoutes from './routes/chat.routes.js'; // <== NEW
+import doctorRoutes from './routes/doctor.routes.js';
+import chatRoutes from './routes/chat.routes.js'; // <-- NEW
 
 // --- 1. Initialize Express App ---
 const app = express();
@@ -41,11 +41,11 @@ app.use('/api/queues', queueRoutes);
 app.use('/api/records', recordRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/notifications', notificationRoutes);
-app.use('/api/chat', chatRoutes); // <== NEW GPT route
+app.use('/api/doctors', doctorRoutes);
+app.use('/api/chat', chatRoutes); // <-- NEW
 
 // --- 5. HTTP Server & Socket.IO Setup ---
 const server = http.createServer(app);
-
 const io = new Server(server, {
   cors: {
     origin: process.env.CLIENT_URL || "http://localhost:3000",
@@ -61,9 +61,9 @@ io.on('connection', (socket) => {
 
   socket.on('join-queue-room', (roomId) => {
     socket.join(roomId);
-    console.log(`Socket ${socket.id} joined room: ${roomId}`);
+    console.log(`Socket ${socket.id} joined queue room: ${roomId}`);
   });
-
+  
   socket.on('join-hospital-emergency-room', (hospitalId) => {
     const hospitalRoom = `hospital_emergency_${hospitalId}`;
     socket.join(hospitalRoom);
@@ -77,7 +77,6 @@ io.on('connection', (socket) => {
 
 // --- 7. Start the Server ---
 const PORT = process.env.PORT || 5000;
-
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT} 🚀`);
 });

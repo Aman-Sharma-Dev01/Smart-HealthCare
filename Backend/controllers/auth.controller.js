@@ -12,7 +12,7 @@ export const registerUser = async (req, res) => {
   const { name, email, password, phone, role, hospitalName, designation } = req.body;
 
   if (!name || !email || !password || !phone || !role) {
-    return res.status(400).json({ message: 'Please provide all required fields: name, email, password, phone, and role.' });
+    return res.status(400).json({ message: 'Please provide all required fields.' });
   }
 
   try {
@@ -23,12 +23,21 @@ export const registerUser = async (req, res) => {
 
     const userData = { name, email, password, phone, role };
 
-    if (role === 'doctor') {
-      if (!hospitalName || !designation) {
-        return res.status(400).json({ message: 'Hospital Name and Designation are required for doctors' });
+    // --- THIS IS THE CORRECTED LOGIC ---
+    // If the role is either 'doctor' or 'helpdesk', hospitalName is required.
+    if (role === 'doctor' || role === 'helpdesk') {
+      if (!hospitalName) {
+        return res.status(400).json({ message: 'Hospital Name is required for this role.' });
       }
       userData.hospitalName = hospitalName;
-      userData.designation = designation;
+
+      // Designation is only required for doctors.
+      if (role === 'doctor') {
+        if (!designation) {
+          return res.status(400).json({ message: 'Designation is required for doctors.' });
+        }
+        userData.designation = designation;
+      }
     }
 
     const user = await User.create(userData);
@@ -71,3 +80,4 @@ export const loginUser = async (req, res) => {
     res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
+  
