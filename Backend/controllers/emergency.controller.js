@@ -45,9 +45,16 @@ export const createEmergencyAlert = async (req, res) => {
         message: notificationMessage,
       });
 
+      // --- THIS IS THE FIX ---
+      // Re-fetch the notification to populate the fields before emitting it
+      const populatedNotification = await Notification.findById(newNotification._id)
+          .populate('patientId', 'name phone')
+          .populate('emergencyId', 'location emergencyType incidentType imagePath status');
+
+      // Emit the fully populated notification object
       const io = req.app.get('socketio');
       const hospitalRoom = `hospital_emergency_${nearestHospital._id}`;
-      io.to(hospitalRoom).emit('new-emergency', newNotification);
+      io.to(hospitalRoom).emit('new-emergency', populatedNotification);
     }
 
     res.status(201).json({ 
@@ -59,9 +66,10 @@ export const createEmergencyAlert = async (req, res) => {
   }
 };
 
+// ... (manageEmergency function remains the same)
 export const manageEmergency = async (req, res) => {
   const { emergencyId } = req.params;
-  const { status, action } = req.body;
+  const { action } = req.body; // Status is now handled automatically
   const helpdeskId = req.user.id;
 
   try {
@@ -70,14 +78,20 @@ export const manageEmergency = async (req, res) => {
       return res.status(404).json({ message: 'Emergency alert not found.' });
     }
 
-    if (status) emergency.status = status;
+    // --- THIS IS THE FIX ---
+    // 1. Automatically update the status to 'acknowledged'.
+    emergency.status = 'acknowledged';
+
+    // 2. Log the specific action taken by the helpdesk user.
     if (action) {
       emergency.actionLog.push({ action, by: helpdeskId });
     }
 
     await emergency.save();
     res.json({ message: 'Emergency status updated.', emergency });
+
   } catch (error) {
     res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
+

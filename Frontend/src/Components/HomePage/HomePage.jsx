@@ -2,6 +2,9 @@
 import React, { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import './HomePage.css';
+import { useNavigate } from 'react-router';
+ 
+ 
 
 // The hardcoded hospital data provided by you
 const hospitalData = [
@@ -82,6 +85,7 @@ const hospitalData = [
   }
 ];
 
+
 // CORRECTED: Accessing the environment variable using Vite's syntax
 const API_KEY = import.meta.env.VITE_MAP_API;
 
@@ -94,7 +98,15 @@ const MAP_CONTAINER_STYLE = {
 };
 const DEFAULT_CENTER = { lat: 28.6139, lng: 77.2090 };
 
-const Header = () => (
+const Header = () => {
+  //Hooks
+  const navigate = useNavigate();
+
+  const NavigatetoLogin = () => {
+  navigate('/login-register');
+}
+
+  return (
     <header className="main-header">
       <div className="logo">
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
@@ -106,9 +118,10 @@ const Header = () => (
         <a href="#find-hospitals">Find Hospitals</a>
         <a href="#contact">Contact</a>
       </nav>
-      <button className="cta-button login-button">Login / Sign Up</button>
-    </header>
+      <button onClick={NavigatetoLogin} className="cta-button login-button">Login / Sign Up</button>
+    </header> 
   );
+}
 
 const HeroSection = () => (
 <section id="home" className="hero-section">

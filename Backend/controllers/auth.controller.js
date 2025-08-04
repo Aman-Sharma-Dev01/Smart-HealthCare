@@ -65,14 +65,21 @@ export const loginUser = async (req, res) => {
     const user = await User.findOne({ email });
 
     if (user && (await user.matchPassword(password))) {
-      res.json({
+      const responsePayload = {
         _id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         role: user.role,
         token: generateToken(user._id),
-      });
+      };
+
+      // If user is staff, include hospitalName in the response
+      if (user.role === 'doctor' || user.role === 'helpdesk') {
+        responsePayload.hospitalName = user.hospitalName;
+      }
+
+      res.json(responsePayload);
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
     }

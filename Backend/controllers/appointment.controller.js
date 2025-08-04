@@ -1,7 +1,7 @@
 import Appointment from '../models/appointment.model.js';
-import Hospital from '../models/hospital.model.js';
 import Queue from '../models/queue.model.js';
 import User from '../models/user.model.js';
+import Hospital from '../models/hospital.model.js';
 
 // For logged-in users booking for themselves
 export const bookAppointment = async (req, res) => {
@@ -13,8 +13,10 @@ export const bookAppointment = async (req, res) => {
     if (!patient) return res.status(404).json({ message: 'Patient not found' });
 
     const today = new Date().toISOString().slice(0, 10);
+    // Correctly finds a queue based on the DOCTOR for today
     let queue = await Queue.findOne({ doctorId, date: today });
     if (!queue) {
+      // Creates a new queue for this specific doctor if one doesn't exist
       queue = new Queue({ hospitalId, doctorId, date: today });
     }
 
@@ -42,6 +44,7 @@ export const bookAppointment = async (req, res) => {
   }
 };
 
+
 // For helpdesk staff booking for walk-in patients
 export const bookOfflineAppointment = async (req, res) => {
   const helpdeskId = req.user.id;
@@ -58,13 +61,16 @@ export const bookOfflineAppointment = async (req, res) => {
       return res.status(404).json({ message: 'Doctor not found in your hospital.' });
     }
     
-    // Find the hospitalId from the doctor's profile
     const hospital = await Hospital.findOne({ name: doctor.hospitalName });
-    if (!hospital) return res.status(404).json({ message: 'Hospital not found.' });
+    if (!hospital) {
+        return res.status(404).json({ message: `Hospital named '${doctor.hospitalName}' not found.` });
+    }
 
     const today = new Date().toISOString().slice(0, 10);
+    // Correctly finds a queue based on the DOCTOR for today
     let queue = await Queue.findOne({ doctorId, date: today });
     if (!queue) {
+      // Creates a new queue for this specific doctor if one doesn't exist
       queue = new Queue({ hospitalId: hospital._id, doctorId, date: today });
     }
 
