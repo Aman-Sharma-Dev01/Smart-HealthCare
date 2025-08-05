@@ -14,7 +14,7 @@ import recordRoutes from './routes/record.routes.js';
 import emergencyRoutes from './routes/emergency.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import doctorRoutes from './routes/doctor.routes.js';
-import chatRoutes from './routes/chat.routes.js'; // <-- NEW
+import chatRoutes from './routes/chat.routes.js';
 
 // --- 1. Initialize Express App ---
 const app = express();
@@ -28,9 +28,24 @@ mongoose.connect(process.env.MONGO_URI)
   });
 
 // --- 3. Middleware Setup ---
-app.use(cors({ origin: process.env.CLIENT_URL || "http://localhost:3000" }));
+// Production-ready CORS configuration
+const allowedOrigins = [process.env.CLIENT_URL, 'http://localhost:5173'];
+
+const corsOptions = {
+  origin: function (origin, callback) {
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+// Note: The 'uploads' folder is for local storage. This will not work on Render's ephemeral filesystem.
+// Google Cloud Storage is the correct approach for production.
 app.use('/uploads', express.static('uploads'));
 
 // --- 4. API Routes ---
@@ -42,51 +57,44 @@ app.use('/api/records', recordRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/doctors', doctorRoutes);
-app.use('/api/chat', chatRoutes); // <-- NEW
+app.use('/api/chat', chatRoutes);
 
 // --- 5. HTTP Server & Socket.IO Setup ---
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || "http://localhost:3000",
-    methods: ['GET', 'POST'],
+    origin: allowedOrigins,
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
   },
 });
 
 app.set('socketio', io);
 
-// --- 6. Socket.IO Connection Logic ---
+// --- 6. Socket.IO Connection Logic (Single, Combined Handler) ---
 io.on('connection', (socket) => {
   console.log(`User connected: ${socket.id} 🔌`);
 
+  // Listener for patient queue rooms
   socket.on('join-queue-room', (roomId) => {
     socket.join(roomId);
     console.log(`Socket ${socket.id} joined queue room: ${roomId}`);
   });
   
+  // Listener for hospital-wide emergency rooms
   socket.on('join-hospital-emergency-room', (hospitalId) => {
     const hospitalRoom = `hospital_emergency_${hospitalId}`;
     socket.join(hospitalRoom);
     console.log(`Socket ${socket.id} joined emergency room: ${hospitalRoom}`);
   });
 
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
-  });
-});
-
-io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id} 🔌`);
-
-  // --- NEW: Room for individual user notifications ---
+  // Listener for private user notification rooms
   socket.on('join-user-room', (userId) => {
       const userRoom = `user_${userId}`;
       socket.join(userRoom);
       console.log(`Socket ${socket.id} joined private room: ${userRoom}`);
   });
 
-  // ... (existing room logic for queues and hospitals)
-
+  // Listener for when a user disconnects
   socket.on('disconnect', () => {
     console.log(`User disconnected: ${socket.id}`);
   });
