@@ -95,7 +95,7 @@ const ServicesSection = () => {
     <section id="services" className="services-section">
       <h2>Our Core Services</h2>
       <div className="services-grid">
-        <ServiceCard icon="📅" title="Book Appointments" description="Easily schedule visits with our specialized doctors online." />
+        <ServiceCard icon="📅" title="Book Appointments" description="Easily schedule visits with our specialized doctors online." onClick={() => navigate('/appointment-booking')} />
         <ServiceCard icon="📄" title="View Medical Records" description="Access your health records and lab results securely anytime." onClick={() => navigate('/vault')} />
         <ServiceCard icon="🚑" title="Emergency Services" description="24/7 emergency care for urgent medical needs." />
         <ServiceCard icon="📊" title="Live Queue Status" description="Check the real-time status of your appointment queue from home." />

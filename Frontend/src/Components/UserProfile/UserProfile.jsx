@@ -43,21 +43,11 @@ const UserProfile = () => {
             try {
                 // This is a placeholder for a real API endpoint to get the user's latest appointment
                 // For now, we simulate a fetch. Replace with your actual API call.
-                // const response = await fetch(`${API_BASE_URL}/appointments/my-latest`, { headers: { 'Authorization': `Bearer ${token}` }});
-                // if (!response.ok) throw new Error('Could not fetch appointment.');
-                // const data = await response.json();
-                // setAppointment(data);
-
-                // --- SIMULATED DATA (Remove when you have the real API) ---
-                setAppointment({
-                    status: 'Scheduled',
-                    hospitalName: "AIIMS, New Delhi",
-                    doctorName: "Dr. Rohan Mehra",
-                    date: "2025-08-10",
-                    appointmentNumber: 12 // Added appointment number
-                });
-                // --- END SIMULATED DATA ---
-
+                const response = await fetch(`${API_BASE_URL}/appointments/my-latest`, { headers: { 'Authorization': `Bearer ${token}` }});
+                if (!response.ok) throw new Error('Could not fetch appointment.');
+                const data = await response.json();
+                setAppointment(data);
+                
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -173,9 +163,10 @@ const UserProfile = () => {
                         <div className="appointment-details">
                             <span className={`badge ${appointment.status?.toLowerCase()}`}>{appointment.status}</span>
                             <p><strong>#️⃣ Appointment No:</strong> {appointment.appointmentNumber}</p>
-                            <p><strong>🏥 Hospital:</strong> {appointment.hospitalName}</p>
-                            <p><strong>👨‍⚕️ Doctor:</strong> {appointment.doctorName}</p>
-                            <p><strong>📆 Date:</strong> {new Date(appointment.date).toLocaleDateString()}</p>
+                            <p><strong>🏥 Hospital:</strong> {appointment.hospitalId.name}</p>
+                            <p><strong>😷 Reason for Visit: </strong> {appointment.reasonForVisit}</p>
+                            <p><strong>👨‍⚕️ Doctor:</strong> {appointment.doctorId.name}</p>
+                            <p><strong>📆 Date:</strong> {new Date(appointment.createdAt).toLocaleDateString()}</p>
                         </div>
                     ) : (
                         <p className="no-appointment">No upcoming appointments scheduled.</p>

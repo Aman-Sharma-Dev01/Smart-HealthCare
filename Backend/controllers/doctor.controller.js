@@ -29,3 +29,16 @@ export const getHospitalDoctors = async (req, res) => {
     res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
+// --- NEW FUNCTION ---
+export const getDoctorsByHospital = async (req, res) => {
+    const { hospitalName } = req.params;
+    try {
+        const doctors = await User.find({
+            role: 'doctor',
+            hospitalName: hospitalName
+        }).select('name designation'); // Send only public info
+        res.json(doctors);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};

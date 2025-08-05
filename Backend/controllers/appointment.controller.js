@@ -96,3 +96,26 @@ export const bookOfflineAppointment = async (req, res) => {
     res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
+// --- NEW FUNCTION ---
+export const getLatestAppointment = async (req, res) => {
+    const patientId = req.user.id;
+
+    try {
+        const latestAppointment = await Appointment.findOne({
+            patientId: patientId,
+            status: 'Scheduled' // Only find appointments that are still upcoming
+        })
+        .sort({ createdAt: -1 }) // Get the most recently created one
+        .populate('hospitalId', 'name') // Get the full hospital object (just the name)
+        .populate('doctorId', 'name');   // Get the full doctor object (just the name)
+
+        // It's okay if no appointment is found, just return null
+        if (!latestAppointment) {
+            return res.json(null);
+        }
+
+        res.json(latestAppointment);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};

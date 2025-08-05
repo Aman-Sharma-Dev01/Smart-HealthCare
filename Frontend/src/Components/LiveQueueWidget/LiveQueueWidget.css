@@ -1,0 +1,141 @@
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css");
+
+.live-queue-widget {
+    position: fixed;
+    bottom: 100px;
+    right: 25px;
+    z-index: 1000;
+}
+
+.widget-toggle-btn {
+    width: 60px;
+    height: 60px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    font-size: 24px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease-in-out, background-color 0.2s;
+}
+
+.widget-toggle-btn:hover {
+    transform: scale(1.1);
+    background-color: #0056b3;
+}
+
+.live-queue-widget.my-turn .widget-toggle-btn {
+    background-color: #28a745; /* Green color */
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 15px rgba(40, 167, 69, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(40, 167, 69, 0);
+    }
+}
+
+.widget-content {
+    position: absolute;
+    bottom: 80px;
+    right: 0;
+    width: 320px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    opacity: 0;
+    transform: translateY(20px);
+    pointer-events: none;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.live-queue-widget.open .widget-content {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+.widget-content h4 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.1rem;
+    color: #333;
+    text-align: center;
+}
+
+.queue-display {
+    display: flex;
+    justify-content: space-around;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.queue-box {
+    text-align: center;
+    padding: 15px;
+    border-radius: 8px;
+    background-color: #f4f7fc;
+    flex: 1;
+}
+
+.queue-label {
+    font-size: 0.8rem;
+    color: #64748b;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.queue-number {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.queue-number.current {
+    color: #28a745;
+}
+
+.queue-number.your {
+    color: #007bff;
+}
+
+.doctor-info {
+    font-size: 0.85rem;
+    color: #64748b;
+    text-align: center;
+    margin: 0;
+    padding-top: 10px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* --- NEW: Styles for the finished state --- */
+.queue-finished-message {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.queue-finished-message .fa-check-circle {
+    font-size: 3rem;
+    color: #28a745;
+    margin-bottom: 10px;
+}
+
+.queue-finished-message h4 {
+    margin-bottom: 5px;
+}
+
+.queue-finished-message p {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0;
+}
