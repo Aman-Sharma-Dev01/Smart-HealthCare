@@ -13,13 +13,15 @@ import HelpdeskDashboard from './Components/HelpdeskDashboard/HelpdeskDashboard'
 const App = () => {
   return (
  <Routes>
-        <Route path="/" element={<HomePage />} />
+        <Route path="*" element={<HomePage />} />
         <Route path="/dashboard" element={<HospitalDashboard />} />
         <Route path="/summarizer" element={<VisionScanner/>} />
         <Route path="/userprofile" element={<UserProfile/>} />
         <Route path="/chatbot" element={<ChatBot/>} />
         <Route path="/prescription" element={<PrescriptionUploader/>} />
         <Route path="/vault" element={<PatientVault/>} />
+        <Route path="/login-register" element={<Login/>} />
+        <Route path="/helpdesk-dashboard" element={<HelpdeskDashboard/>} />
       </Routes>
     // <PrescriptionUploader/>
     //  <PatientVault/>
