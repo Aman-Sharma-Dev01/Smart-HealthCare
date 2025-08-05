@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './PatientVault.css';
+import { BACKEND_API_URL } from '../../util';
 
 const PatientVault = () => {
     const [records, setRecords] = useState([]);
@@ -10,7 +11,7 @@ const PatientVault = () => {
     
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = BACKEND_API_URL;
 
     useEffect(() => {
         const loggedInUser = JSON.parse(localStorage.getItem('user'));

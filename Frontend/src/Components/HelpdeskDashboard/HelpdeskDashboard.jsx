@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './HelpdeskDashboard.css';
 import { io } from "socket.io-client";
+import { BACKEND_API_URL, SocketIO_URL } from '../../util';
 
 // A simple Toast component for notifications
 const Toast = ({ message, type, onDismiss }) => {
@@ -32,7 +33,7 @@ const HelpdeskDashboard = () => {
 
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = BACKEND_API_URL;
     const token = localStorage.getItem('token');
     const emergencyAudioRef = useRef(new Audio('/emergency-alert.mp3'));
 
@@ -71,7 +72,7 @@ const HelpdeskDashboard = () => {
 
     useEffect(() => {
         if (!user || !user.hospitalName) return;
-        const socket = io("http://localhost:5000");
+        const socket = io(SocketIO_URL);
         const getHospitalIdAndJoinRoom = async () => {
             try {
                 const res = await fetch(`${API_BASE_URL}/hospitals/by-name/${encodeURIComponent(user.hospitalName)}`, {

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { io } from "socket.io-client";
 import './HospitalDashboard.css';
+import { BACKEND_API_URL, SocketIO_URL } from '../../util';
 
 // --- Sub-component: Header ---
 const Header = ({ doctorName }) => (
@@ -103,7 +104,7 @@ function DoctorDashboard() {
     
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = BACKEND_API_URL;
 
     useEffect(() => {
         const loggedInUser = JSON.parse(localStorage.getItem('user'));
@@ -134,7 +135,7 @@ function DoctorDashboard() {
     useEffect(() => {
         if (!queueData?._id) return;
 
-        const socket = io("http://localhost:5000");
+        const socket = io(SocketIO_URL);
         socket.emit('join-queue-room', queueData._id);
 
         // Listener for when the doctor advances the queue

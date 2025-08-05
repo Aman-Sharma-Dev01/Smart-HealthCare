@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-maps/api';
 import './HomePage.css';
 import { useNavigate } from 'react-router-dom';
+import { BACKEND_API_URL } from '../../util';
 
 // --- Configuration ---
-const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = BACKEND_API_URL;
 const API_KEY = import.meta.env.VITE_MAP_API; // Using Vite's syntax for environment variables
 const LIBRARIES = ['places'];
 const MAP_CONTAINER_STYLE = {

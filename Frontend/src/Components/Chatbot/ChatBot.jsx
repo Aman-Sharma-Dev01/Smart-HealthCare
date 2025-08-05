@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import './ChatBot.css';
 import { MessageCircle } from 'lucide-react'; // You can replace with any icon
+import { BACKEND_API_URL } from '../../util';
 
 const ChatBot = () => {
   const [open, setOpen] = useState(false);
@@ -19,7 +20,7 @@ const ChatBot = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/chat/ask', {
+      const res = await fetch(`${BACKEND_API_URL}/chat/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: input }),

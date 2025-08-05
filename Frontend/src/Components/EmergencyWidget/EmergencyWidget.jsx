@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './EmergencyWidget.css';
 import { io } from "socket.io-client";
+import { BACKEND_API_URL, SocketIO_URL } from '../../util';
 
 // A simple Toast component for notifications
 const Toast = ({ message, type, onDismiss }) => {
@@ -25,7 +26,7 @@ const EmergencyWidget = () => {
     const [image, setImage] = useState(null);
 
     const token = localStorage.getItem('token');
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = BACKEND_API_URL;
 
     useEffect(() => {
         const loggedInUser = JSON.parse(localStorage.getItem('user'));
@@ -39,7 +40,7 @@ const EmergencyWidget = () => {
     useEffect(() => {
         if (!user) return;
 
-        const socket = io("http://localhost:5000");
+        const socket = io(SocketIO_URL);
         socket.emit('join-user-room', user._id);
 
         socket.on('emergency-updated', (updatedEmergency) => {

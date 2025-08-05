@@ -2,6 +2,52 @@ import React, { useState } from 'react';
 import './Login.css';
 import { BACKEND_API_URL } from '../../util';
 
+// Hardcoded hospital data for the dropdown
+const hospitalData = [
+    { "name": "Amrita Hospital, Faridabad" },
+    { "name": "Accord Superspeciality Hospital" },
+    { "name": "AIIMS, New Delhi" },
+    { "name": "Artemis Hospital" },
+    { "name": "Asian Institute of Medical Sciences" },
+    { "name": "Batra Hospital & Medical Research Centre" },
+    { "name": "BLK-Max Super Speciality Hospital" },
+    { "name": "CK Birla Hospital, Gurugram" },
+    { "name": "ESI Medical College & Hospital" },
+    { "name": "Fortis Escorts Hospital" },
+    { "name": "Fortis Flt. Lt. Rajan Dhall Hospital, Vasant Kunj" },
+    { "name": "Fortis Hospital, Noida" },
+    { "name": "Fortis Memorial Research Institute" },
+    { "name": "Holy Family Hospital" },
+    { "name": "Medicheck Ortho Superspeciality Hospital" },
+    { "name": "Batra Heart & Multispecialty Hospital" },
+    { "name": "Marengo Asia Hospitals, Faridabad" },
+    { "name": "Park Hospital, Faridabad" },
+    { "name": "Tara Netralaya Faridabad (Run by Tara Sansthan, Udaipur, Raj)" },
+    { "name": "Indian Spinal Injuries Centre" },
+    { "name": "Indraprastha Apollo Hospitals" },
+    { "name": "Jaypee Hospital" },
+    { "name": "Kailash Hospital" },
+    { "name": "Manipal Hospital, Dwarka" },
+    { "name": "Max Healthcare Hospital, Saket" },
+    { "name": "Max Hospital, Noida" },
+    { "name": "Max Super Speciality Hospital, Patparganj" },
+    { "name": "Max Super Speciality Hospital, Vaishali" },
+    { "name": "Medanta - The Medicity" },
+    { "name": "Metro Heart Institute" },
+    { "name": "Moolchand Medcity" },
+    { "name": "Paras Hospital, Gurugram" },
+    { "name": "QRG Health City" },
+    { "name": "Safdarjung Hospital" },
+    { "name": "Sarvodaya Hospital" },
+    { "name": "Sharda Hospital" },
+    { "name": "Sir Ganga Ram Hospital" },
+    { "name": "Venkateshwar Hospital" },
+    { "name": "W Pratiksha Hospital" },
+    { "name": "Yashoda Super Speciality Hospital, Kaushambi" },
+    { "name": "Yatharth Super Speciality Hospital, Greater Noida" }
+];
+
+
 const Login = () => {
     const [isLoginView, setIsLoginView] = useState(true);
     const [role, setRole] = useState('patient');
@@ -30,7 +76,14 @@ const Login = () => {
     };
 
     const handleRoleChange = (e) => {
-        setRole(e.target.value);
+        const newRole = e.target.value;
+        setRole(newRole);
+        // Reset conditional fields when role changes
+        setRegisterData(prevData => ({
+            ...prevData,
+            hospitalName: newRole === 'patient' ? '' : prevData.hospitalName,
+            designation: newRole !== 'doctor' ? '' : prevData.designation,
+        }));
     };
 
     const handleLoginSubmit = async (e) => {
@@ -65,7 +118,21 @@ const Login = () => {
         e.preventDefault();
         setLoading(true);
         setError('');
-        const payload = { ...registerData, role };
+        
+        const payload = {
+            name: registerData.name,
+            email: registerData.email,
+            phone: registerData.phone,
+            password: registerData.password,
+            role: role
+        };
+
+        if (role === 'doctor' || role === 'helpdesk') {
+            payload.hospitalName = registerData.hospitalName;
+        }
+        if (role === 'doctor') {
+            payload.designation = registerData.designation;
+        }
 
         try {
             const response = await fetch(`${API_BASE_URL}/auth/register`, {
@@ -75,7 +142,10 @@ const Login = () => {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Failed to register');
+            
             setIsLoginView(true);
+            setError(''); 
+            
         } catch (err) {
             setError(err.message);
         } finally {
@@ -87,7 +157,6 @@ const Login = () => {
         <div className="auth-wrapper">
             <div className="auth-card">
                 
-                {/* Logo Header */}
                 <div className="auth-header">
                     <img
                         src="/36cc9f43-2946-4fc0-a653-e9ce37b830fb.png"
@@ -96,7 +165,6 @@ const Login = () => {
                     />
                 </div>
 
-                {/* Login Form */}
                 <div className={`auth-form-container ${isLoginView ? 'active' : ''}`}>
                     <form onSubmit={handleLoginSubmit} className="auth-form">
                         <h2 className="form-title">Welcome Back</h2>
@@ -121,7 +189,6 @@ const Login = () => {
                     </form>
                 </div>
 
-                {/* Register Form */}
                 <div className={`auth-form-container ${!isLoginView ? 'active' : ''}`}>
                     <form onSubmit={handleRegisterSubmit} className="auth-form">
                         <h2 className="form-title">Create Account</h2>
@@ -156,13 +223,32 @@ const Login = () => {
                         <div className={`conditional-field ${role !== 'patient' ? 'visible' : ''}`}>
                             <div className="input-group">
                                 <label htmlFor="hospitalName">Hospital Name</label>
-                                <input id="hospitalName" name="hospitalName" type="text" onChange={handleRegisterChange} value={registerData.hospitalName} />
+                                <select 
+                                    id="hospitalName" 
+                                    name="hospitalName" 
+                                    onChange={handleRegisterChange} 
+                                    value={registerData.hospitalName} 
+                                    required={role !== 'patient'}>
+                                    <option value="">Select a hospital...</option>
+                                    {hospitalData.map((hospital) => (
+                                        <option key={hospital.name} value={hospital.name}>
+                                            {hospital.name}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                         <div className={`conditional-field ${role === 'doctor' ? 'visible' : ''}`}>
                             <div className="input-group">
                                 <label htmlFor="designation">Designation</label>
-                                <input id="designation" name="designation" type="text" onChange={handleRegisterChange} value={registerData.designation} />
+                                <input 
+                                    id="designation" 
+                                    name="designation" 
+                                    type="text" 
+                                    placeholder="e.g., Cardiologist, General Physician"
+                                    onChange={handleRegisterChange} 
+                                    value={registerData.designation} 
+                                    required={role === 'doctor'}/>
                             </div>
                         </div>
 

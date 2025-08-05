@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from "socket.io-client";
 import './LiveQueueWidget.css';
+import { BACKEND_API_URL, SocketIO_URL } from '../../util';
 
 const LiveQueueWidget = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -10,7 +11,7 @@ const LiveQueueWidget = () => {
     const [isQueueFinished, setIsQueueFinished] = useState(false);
 
     const token = localStorage.getItem('token');
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = BACKEND_API_URL;
 
     // Ref for the appointment audio alert
     const appointmentAudioRef = useRef(new Audio('/appointment-alert.mp3'));
@@ -66,7 +67,7 @@ const LiveQueueWidget = () => {
             return;
         }
 
-        const socket = io("http://localhost:5000");
+        const socket = io(SocketIO_URL);
         socket.emit('join-queue-room', queueStatus.queueId);
 
         socket.on('queue-update', (data) => {
