@@ -27,23 +27,21 @@ body {
   align-items: flex-start;
 }
 
+.profile-header h2 {
+    margin-top: 0;
+}
+
+.profile-header p {
+    margin: 5px 0;
+    color: #555;
+}
+
 .avatar {
   width: 100px;
   height: 100px;
   border-radius: 50%;
   border: 3px solid #007bff;
   object-fit: cover;
-}
-
-.edit-btn {
-  margin-top: 10px;
-  padding: 8px 14px;
-  border: none;
-  background-color: #007bff;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
 }
 
 /* Grid */
@@ -59,40 +57,63 @@ body {
   }
 }
 
-/* Upload */
+/* Upload Section */
+.upload-section h3, .appointment-section h3, .shortcut-section h3 {
+    margin-top: 0;
+    color: #333;
+}
+
+/* --- UPDATED: Form layout --- */
+.upload-section form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px; /* Adds space between all form elements */
+}
+
 .upload-box {
   border: 2px dashed #007bff55;
-  padding: 35px;
+  padding: 25px; /* Adjusted padding */
   text-align: center;
   color: #007bff;
   background-color: #f0f8ff;
   border-radius: 10px;
-  margin-bottom: 20px;
   cursor: pointer;
+  transition: background-color 0.2s;
+  /* margin removed to be handled by form gap */
 }
 
-.doc-list {
-  list-style: none;
-  padding-left: 0;
+.upload-box:hover {
+    background-color: #e6f3ff;
 }
 
-.doc-list li {
-  background: #f8faff;
-  margin-bottom: 8px;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 14px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.upload-btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background-color: #007bff;
+    color: white;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 500;
 }
 
-.remove-btn {
-  background: transparent;
-  color: red;
-  border: none;
-  font-size: 16px;
-  cursor: pointer;
+.upload-btn:disabled {
+    background-color: #a0cfff;
+    cursor: not-allowed;
+}
+
+.form-group {
+    margin-bottom: 0; /* Handled by form gap */
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 1rem;
+    box-sizing: border-box; /* Ensures padding doesn't affect width */
 }
 
 /* Appointment */
@@ -104,28 +125,45 @@ body {
   position: relative;
 }
 
-.badge.confirmed {
-  background: #28a745;
+.appointment-details p {
+    margin: 8px 0;
+}
+
+.badge {
   color: white;
   padding: 4px 10px;
   border-radius: 20px;
   font-size: 13px;
+  font-weight: 500;
   position: absolute;
   top: 15px;
   right: 15px;
 }
 
-.reschedule-btn {
-  margin-top: 12px;
-  background: #ffc107;
-  color: #333;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 6px;
-  cursor: pointer;
+.badge.scheduled {
+  background: #28a745; /* Green */
+}
+
+.badge.cancelled {
+    background: #dc3545; /* Red */
 }
 
 .no-appointment {
   font-style: italic;
   color: #888;
+}
+
+/* Shortcuts */
+.shortcut-section {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.shortcut-section:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+}
+
+.shortcut-section p {
+    color: #666;
 }
