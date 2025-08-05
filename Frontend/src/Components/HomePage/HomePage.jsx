@@ -16,10 +16,11 @@ const MAP_CONTAINER_STYLE = {
 };
 const DEFAULT_CENTER = { lat: 28.6139, lng: 77.2090 }; // Default to Delhi
 
-// --- Header Component ---
+// --- Header Component (UPDATED with Responsive Nav) ---
 const Header = () => {
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [user, setUser] = useState(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false); // State for mobile menu
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -38,6 +39,21 @@ const Header = () => {
         setUser(null);
         navigate('/'); // Navigate to home after logout
     };
+    
+    // Function to handle navigation and close the menu
+    const handleNavClick = (path) => {
+        setIsMenuOpen(false); // Always close menu on click
+        if (path) {
+            navigate(path);
+        }
+    };
+    
+    // Function to handle anchor link clicks and close the menu
+    const handleAnchorClick = (anchor) => {
+        setIsMenuOpen(false);
+        // Use standard href navigation for anchor links
+        window.location.href = anchor;
+    }
 
     return (
         <header className="main-header">
@@ -45,18 +61,36 @@ const Header = () => {
                 <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
                 <span>MediCare+</span>
             </div>
-            <nav className="main-nav">
-                <a href="#home">Home</a>
-                <a href="#services">Services</a>
-                <a href="#find-hospitals">Find Hospitals</a>
-                <a href="#contact">Contact</a>
+
+            <nav className={`main-nav ${isMenuOpen ? 'active' : ''}`}>
+                <a href="#home" onClick={() => handleAnchorClick('#home')}>Home</a>
+                <a href="#services" onClick={() => handleAnchorClick('#services')}>Services</a>
+                <a href="#find-hospitals" onClick={() => handleAnchorClick('#find-hospitals')}>Find Hospitals</a>
+                <a href="#contact" onClick={() => handleAnchorClick('#contact')}>Contact</a>
+                
+                {/* Mobile-only action buttons inside the nav drawer */}
+                <div className="header-actions-mobile">
+                    {isLoggedIn ? (
+                        <>
+                            <button onClick={() => handleNavClick('/userprofile')} className="profile-button">
+                                <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} alt="avatar" className="profile-avatar"/>
+                                <span>{user?.name}</span>
+                            </button>
+                            <button onClick={() => { handleLogout(); setIsMenuOpen(false); }} className="cta-button logout-button">Logout</button>
+                        </>
+                    ) : (
+                        <button onClick={() => handleNavClick('/login-register')} className="cta-button login-button">Login / Sign Up</button>
+                    )}
+                </div>
             </nav>
-            <div className="header-actions">
+
+            {/* Desktop-only action buttons */}
+            <div className="header-actions-desktop">
                 {isLoggedIn ? (
                     <>
                         <button onClick={() => navigate('/userprofile')} className="profile-button">
-                            <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${user.name}`} alt="avatar" className="profile-avatar"/>
-                            <span>{user.name}</span>
+                            <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name}`} alt="avatar" className="profile-avatar"/>
+                            <span>{user?.name}</span>
                         </button>
                         <button onClick={handleLogout} className="cta-button logout-button">Logout</button>
                     </>
@@ -64,6 +98,15 @@ const Header = () => {
                     <button onClick={() => navigate('/login-register')} className="cta-button login-button">Login / Sign Up</button>
                 )}
             </div>
+
+            {/* Burger Menu Button */}
+            <button className="burger-menu" onClick={() => setIsMenuOpen(!isMenuOpen)} aria-label="Toggle menu">
+                {isMenuOpen ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+                )}
+            </button>
         </header> 
     );
 }
@@ -248,13 +291,6 @@ const Footer = () => (
 const HomePage = () => {
     return (
         <div className="homepage-container">
-            {/* Add styles for new buttons */}
-            <style>{`
-                .header-actions { display: flex; align-items: center; gap: 1rem; }
-                .profile-button { display: flex; align-items: center; gap: 0.5rem; background: #eaf0f7; border: 1px solid #d9e2f1; padding: 8px 12px; border-radius: 20px; cursor: pointer; font-weight: 500;}
-                .profile-avatar { width: 24px; height: 24px; border-radius: 50%; }
-                .logout-button { background-color: #f44336; border-color: #f44336; }
-            `}</style>
             <Header />
             <main>
                 <HeroSection />
