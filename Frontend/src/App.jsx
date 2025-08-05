@@ -6,20 +6,27 @@ import PrescriptionUploader from './Components/PrescriptionUploader/Prescription
 import PatientVault from './Components/PatientVault/PatientVault';
 import VisionScanner from './Components/VisionScanner/VisionScanner';
 import ChatBot from './Components/ChatBot/ChatBot';
+import UserProfile from './Components/UserProfile/UserProfile';
 
 
 const App = () => {
   return (
 
-      // <Routes>
-      //   <Route path="/" element={<HomePage />} />
-      //   <Route path="/dashboard" element={<HospitalDashboard />} />
-      // </Routes>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/dashboard" element={<HospitalDashboard />} />
+        <Route path="/summarizer" element={<VisionScanner/>} />
+        <Route path="/userprofile" element={<UserProfile/>} />
+        <Route path="/chatbot" element={<ChatBot/>} />
+        <Route path="/prescription" element={<PrescriptionUploader/>} />
+        <Route path="/vault" element={<PatientVault/>} />
+      </Routes>
     // <PrescriptionUploader/>
     //  <PatientVault/>
       // <VisionScanner/>
+      // <UserProfile/>
 
-      <ChatBot/>
+      // <ChatBot/>
     
 
   );

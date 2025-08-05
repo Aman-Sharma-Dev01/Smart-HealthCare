@@ -1,0 +1,131 @@
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #eef3f8;
+}
+
+.dashboard {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+/* Cards */
+.card {
+  background: #ffffffcc;
+  backdrop-filter: blur(6px);
+  border-radius: 16px;
+  padding: 25px 30px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+  margin-bottom: 30px;
+}
+
+/* Profile Header */
+.profile-header {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 3px solid #007bff;
+  object-fit: cover;
+}
+
+.edit-btn {
+  margin-top: 10px;
+  padding: 8px 14px;
+  border: none;
+  background-color: #007bff;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Grid */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Upload */
+.upload-box {
+  border: 2px dashed #007bff55;
+  padding: 35px;
+  text-align: center;
+  color: #007bff;
+  background-color: #f0f8ff;
+  border-radius: 10px;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+
+.doc-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.doc-list li {
+  background: #f8faff;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.remove-btn {
+  background: transparent;
+  color: red;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+/* Appointment */
+.appointment-details {
+  background: #e6f3ff;
+  padding: 20px;
+  border-left: 5px solid #007bff;
+  border-radius: 10px;
+  position: relative;
+}
+
+.badge.confirmed {
+  background: #28a745;
+  color: white;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.reschedule-btn {
+  margin-top: 12px;
+  background: #ffc107;
+  color: #333;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.no-appointment {
+  font-style: italic;
+  color: #888;
+}
