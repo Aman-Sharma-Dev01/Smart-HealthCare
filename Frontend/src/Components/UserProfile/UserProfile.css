@@ -1,3 +1,5 @@
+/* ... (all existing styles from before remain the same) */
+
 body {
   margin: 0;
   font-family: 'Segoe UI', sans-serif;
@@ -44,6 +46,12 @@ body {
   object-fit: cover;
 }
 
+.hospital-info {
+    margin-top: 10px;
+    font-weight: 500;
+    color: #333;
+}
+
 /* Grid */
 .grid {
   display: grid;
@@ -63,23 +71,21 @@ body {
     color: #333;
 }
 
-/* --- UPDATED: Form layout --- */
 .upload-section form {
     display: flex;
     flex-direction: column;
-    gap: 15px; /* Adds space between all form elements */
+    gap: 15px;
 }
 
 .upload-box {
   border: 2px dashed #007bff55;
-  padding: 25px; /* Adjusted padding */
+  padding: 25px;
   text-align: center;
   color: #007bff;
   background-color: #f0f8ff;
   border-radius: 10px;
   cursor: pointer;
   transition: background-color 0.2s;
-  /* margin removed to be handled by form gap */
 }
 
 .upload-box:hover {
@@ -104,7 +110,7 @@ body {
 }
 
 .form-group {
-    margin-bottom: 0; /* Handled by form gap */
+    margin-bottom: 0;
 }
 
 .form-group input, .form-group select {
@@ -113,7 +119,7 @@ body {
     border-radius: 8px;
     border: 1px solid #ccc;
     font-size: 1rem;
-    box-sizing: border-box; /* Ensures padding doesn't affect width */
+    box-sizing: border-box;
 }
 
 /* Appointment */
@@ -140,13 +146,8 @@ body {
   right: 15px;
 }
 
-.badge.scheduled {
-  background: #28a745; /* Green */
-}
-
-.badge.cancelled {
-    background: #dc3545; /* Red */
-}
+.badge.scheduled { background: #28a745; }
+.badge.cancelled { background: #dc3545; }
 
 .no-appointment {
   font-style: italic;
@@ -166,4 +167,48 @@ body {
 
 .shortcut-section p {
     color: #666;
+}
+
+/* --- NEW: Staff Dashboard Link Card --- */
+.dashboard-link-card {
+    background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+    color: white;
+    border-radius: 16px;
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.dashboard-link-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 15px 30px rgba(0, 86, 179, 0.3);
+}
+
+.dashboard-link-icon {
+    font-size: 3rem;
+    opacity: 0.8;
+}
+
+.dashboard-link-info h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.5rem;
+}
+
+.dashboard-link-info p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 1rem;
+}
+
+.dashboard-link-arrow {
+    margin-left: auto;
+    font-size: 2rem;
+    transition: transform 0.3s ease;
+}
+
+.dashboard-link-card:hover .dashboard-link-arrow {
+    transform: translateX(10px);
 }

@@ -69,7 +69,7 @@ export const createEmergencyAlert = async (req, res) => {
 // ... (manageEmergency function remains the same)
 export const manageEmergency = async (req, res) => {
   const { emergencyId } = req.params;
-  const { action } = req.body; // Status is now handled automatically
+  const { action } = req.body;
   const helpdeskId = req.user.id;
 
   try {
@@ -88,10 +88,15 @@ export const manageEmergency = async (req, res) => {
     }
 
     await emergency.save();
+
+    // --- NEW: Notify the patient in real-time about the action ---
+    const io = req.app.get('socketio');
+    const patientRoom = `user_${emergency.userId}`;
+    io.to(patientRoom).emit('emergency-updated', emergency);
+
     res.json({ message: 'Emergency status updated.', emergency });
 
   } catch (error) {
     res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
-

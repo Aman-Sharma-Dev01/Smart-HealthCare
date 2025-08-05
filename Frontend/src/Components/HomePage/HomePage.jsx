@@ -68,16 +68,19 @@ const Header = () => {
 }
 
 // --- Hero Section Component ---
-const HeroSection = () => (
+const HeroSection = () => {
+  const navigate = useNavigate();
+  return (
     <section id="home" className="hero-section">
         <div className="hero-content">
             <h1>Your Health, Our Priority</h1>
             <p>Providing compassionate and comprehensive healthcare for you and your family. Access services, book appointments, and find care near you.</p>
-            <button className="cta-button primary-cta">Book an Appointment</button>
+            <button onClick={() => navigate('/appointment-booking')}
+            className="cta-button primary-cta">Book an Appointment</button>
         </div>
     </section>
 );
-
+}
 // UPDATED: ServiceCard now accepts onClick
 const ServiceCard = ({ icon, title, description, onClick }) => (
   <div className="service-card" onClick={onClick} style={{ cursor: onClick ? 'pointer' : 'default' }}>
@@ -232,12 +235,7 @@ const Footer = () => (
                     <li><a href="#contact">Contact Us</a></li>
                 </ul>
             </div>
-            <div className="footer-contact">
-                <h4>Contact Info</h4>
-                <p>123 Health St, Wellness City, 110001</p>
-                <p>Email: contact@medicareplus.com</p>
-                <p>Phone: (123) 456-7890</p>
-            </div>
+            
         </div>
         <div className="footer-bottom">
             <p>&copy; {new Date().getFullYear()} MediCare+. All Rights Reserved.</p>

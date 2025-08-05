@@ -18,10 +18,10 @@ const UserProfile = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     
-    // State for the upload form
+    // State for the upload form (only used by patients)
     const [fileToUpload, setFileToUpload] = useState(null);
     const [documentTitle, setDocumentTitle] = useState('');
-    const [documentType, setDocumentType] = useState('Prescription'); // Default value
+    const [documentType, setDocumentType] = useState('Prescription');
     const [isUploading, setIsUploading] = useState(false);
 
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
@@ -34,29 +34,32 @@ const UserProfile = () => {
         const loggedInUser = JSON.parse(localStorage.getItem('user'));
 
         if (!token || !loggedInUser) {
-            navigate('/login'); // Redirect if not authenticated
+            navigate('/login-register');
             return;
         }
         setUser(loggedInUser);
 
-        const fetchAppointmentData = async () => {
-            try {
-                // This is a placeholder for a real API endpoint to get the user's latest appointment
-                // For now, we simulate a fetch. Replace with your actual API call.
-                const response = await fetch(`${API_BASE_URL}/appointments/my-latest`, { headers: { 'Authorization': `Bearer ${token}` }});
-                if (!response.ok) throw new Error('Could not fetch appointment.');
-                const data = await response.json();
-                setAppointment(data);
-                
-            } catch (err) {
-                setError(err.message);
-            } finally {
-                setIsLoading(false);
-            }
-        };
-
-        fetchAppointmentData();
-
+        // Fetch appointment data ONLY if the user is a patient
+        if (loggedInUser.role === 'patient') {
+            const fetchAppointmentData = async () => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/appointments/my-latest`, { 
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!response.ok) console.error('Could not fetch appointment.');
+                    const data = await response.json();
+                    setAppointment(data);
+                } catch (err) {
+                    setError(err.message);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+            fetchAppointmentData();
+        } else {
+            // For other roles, we can stop loading immediately
+            setIsLoading(false);
+        }
     }, [token, navigate]);
 
     const showToast = (message, type = 'success') => {
@@ -76,7 +79,6 @@ const UserProfile = () => {
             return;
         }
         setIsUploading(true);
-
         const formData = new FormData();
         formData.append('title', documentTitle);
         formData.append('recordType', documentType);
@@ -90,12 +92,9 @@ const UserProfile = () => {
             });
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Upload failed');
-
             showToast('Document uploaded successfully!');
-            // Reset form
             setFileToUpload(null);
             setDocumentTitle('');
-            setDocumentType('Prescription');
         } catch (err) {
             showToast(`Error: ${err.message}`, 'error');
         } finally {
@@ -106,11 +105,72 @@ const UserProfile = () => {
     if (isLoading) return <div className="loading-state">Loading Profile...</div>;
     if (error) return <div className="error-state">{error}</div>;
 
+    // --- Sub-components for different roles ---
+    const PatientDashboard = () => (
+        <div className="grid">
+            <div className="card upload-section">
+                <h3>📤 Upload Medical Document</h3>
+                <form onSubmit={handleDocumentUpload}>
+                    <div className="form-group"><input type="text" placeholder="Document Title" value={documentTitle} onChange={(e) => setDocumentTitle(e.target.value)} required /></div>
+                    <div className="form-group"><select value={documentType} onChange={(e) => setDocumentType(e.target.value)}><option>Prescription</option><option>Lab Test</option><option>X-Ray</option><option>Other</option></select></div>
+                    <label htmlFor="file-upload" className="upload-box"><p>{fileToUpload ? `Selected: ${fileToUpload.name}` : 'Click to select a file'}</p><input type="file" id="file-upload" onChange={handleFileSelect} hidden /></label>
+                    <button type="submit" className="upload-btn" disabled={isUploading}>{isUploading ? 'Uploading...' : 'Upload Document'}</button>
+                </form>
+            </div>
+            <div className="card appointment-section">
+                <h3>📅 Your Next Appointment</h3>
+                {appointment ? (
+                    <div className="appointment-details">
+                        <span className={`badge ${appointment.status?.toLowerCase()}`}>{appointment.status}</span>
+                        <p><strong>#️⃣ Appointment No:</strong> {appointment.appointmentNumber}</p>
+                        <p><strong>🏥 Hospital:</strong> {appointment.hospitalId?.name}</p>
+                        <p><strong>👨‍⚕️ Doctor:</strong> {appointment.doctorId?.name}</p>
+                        <p><strong>📆 Date:</strong> {new Date(appointment.createdAt).toLocaleDateString()}</p>
+                    </div>
+                ) : <p className="no-appointment">No upcoming appointments scheduled.</p>}
+            </div>
+            <div className="card shortcut-section" onClick={() => navigate('/vault')}><h3>🔐 Patient Vault</h3><p>Securely access all your uploaded records</p></div>
+            <div className="card shortcut-section" onClick={() => navigate('/summarizer')}><h3>📝 Report Summarizer</h3><p>Summarize your medical reports using AI</p></div>
+        </div>
+    );
+
+    const StaffDashboardLink = ({ role }) => {
+        const details = {
+            doctor: {
+                title: "Doctor Dashboard",
+                description: "Manage your appointments, view patient queues, and update schedules.",
+                icon: "fas fa-user-md",
+                path: "/doctor-dashboard"
+            },
+            helpdesk: {
+                title: "Helpdesk Dashboard",
+                description: "Manage hospital doctors, book offline appointments, and handle emergency alerts.",
+                icon: "fas fa-headset",
+                path: "/helpdesk-dashboard"
+            }
+        };
+        const roleDetails = details[role];
+
+        return (
+            <div className="dashboard-link-card" onClick={() => navigate(roleDetails.path)}>
+                <div className="dashboard-link-icon">
+                    <i className={roleDetails.icon}></i>
+                </div>
+                <div className="dashboard-link-info">
+                    <h3>{roleDetails.title}</h3>
+                    <p>{roleDetails.description}</p>
+                </div>
+                <div className="dashboard-link-arrow">
+                    <i className="fas fa-arrow-right"></i>
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div className="dashboard">
             {toast.show && <Toast message={toast.message} type={toast.type} onDismiss={() => setToast({ show: false, message: '', type: '' })} />}
             
-            {/* Profile Info */}
             <div className="card profile-section">
                 <div className="profile-header">
                     <img src={`https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`} alt="User Avatar" className="avatar" />
@@ -119,72 +179,17 @@ const UserProfile = () => {
                         <p>ID: {user?._id.slice(-6).toUpperCase()}</p>
                         <p>Email: {user?.email}</p>
                         <p>Phone: {user?.phone}</p>
+                        {(user?.role === 'doctor' || user?.role === 'helpdesk') && (
+                            <p className="hospital-info"><strong>🏥 Hospital:</strong> {user.hospitalName}</p>
+                        )}
                     </div>
                 </div>
             </div>
 
-            <div className="grid">
-                {/* Upload Section */}
-                <div className="card upload-section">
-                    <h3>📤 Upload Medical Document</h3>
-                    <form onSubmit={handleDocumentUpload}>
-                        <div className="form-group">
-                            <input type="text" placeholder="Document Title (e.g., Blood Report)" value={documentTitle} onChange={(e) => setDocumentTitle(e.target.value)} required />
-                        </div>
-                        <div className="form-group">
-                            <select value={documentType} onChange={(e) => setDocumentType(e.target.value)}>
-                                <option>Prescription</option>
-                        <option>Lab Test</option>
-                        <option>X-Ray</option>
-                        <option>ECG</option>
-                        <option>MRI</option>
-                        <option>CT Scan</option>
-                        <option>Ultrasound</option>
-                        <option>Discharge Summary</option>
-                        <option>Pathology Report</option>
-                        <option>Vaccination Record</option>
-                        <option>Other</option>
-                            </select>
-                        </div>
-                        <label htmlFor="file-upload" className="upload-box">
-                            <p className='upload-label'>{fileToUpload ? `Selected: ${fileToUpload.name}` : 'Click to select a file'}</p>
-                            <input type="file" id="file-upload" onChange={handleFileSelect} hidden />
-                        </label>
-                        <button type="submit" className="upload-btn" disabled={isUploading}>
-                            {isUploading ? 'Uploading...' : 'Upload Document'}
-                        </button>
-                    </form>
-                </div>
-
-                {/* Appointment Section */}
-                <div className="card appointment-section">
-                    <h3>📅 Your Next Appointment</h3>
-                    {appointment ? (
-                        <div className="appointment-details">
-                            <span className={`badge ${appointment.status?.toLowerCase()}`}>{appointment.status}</span>
-                            <p><strong>#️⃣ Appointment No:</strong> {appointment.appointmentNumber}</p>
-                            <p><strong>🏥 Hospital:</strong> {appointment.hospitalId.name}</p>
-                            <p><strong>😷 Reason for Visit: </strong> {appointment.reasonForVisit}</p>
-                            <p><strong>👨‍⚕️ Doctor:</strong> {appointment.doctorId.name}</p>
-                            <p><strong>📆 Date:</strong> {new Date(appointment.createdAt).toLocaleDateString()}</p>
-                        </div>
-                    ) : (
-                        <p className="no-appointment">No upcoming appointments scheduled.</p>
-                    )}
-                </div>
-
-                {/* Vault Shortcut */}
-                <div className="card shortcut-section" onClick={() => navigate('/vault')}>
-                    <h3>🔐 Patient Vault</h3>
-                    <p>Securely access all your uploaded records</p>
-                </div>
-
-                {/* Summarizer Shortcut */}
-                <div className="card shortcut-section" onClick={() => navigate('/summarizer')}>
-                    <h3>📝 Report Summarizer</h3>
-                    <p>Summarize your medical reports using AI</p>
-                </div>
-            </div>
+            {/* Conditionally render the dashboard based on user role */}
+            {user?.role === 'patient' && <PatientDashboard />}
+            {user?.role === 'doctor' && <StaffDashboardLink role="doctor" />}
+            {user?.role === 'helpdesk' && <StaffDashboardLink role="helpdesk" />}
         </div>
     );
 };

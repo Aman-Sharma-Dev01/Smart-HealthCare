@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { io } from "socket.io-client";
 import './LiveQueueWidget.css';
 
@@ -7,10 +7,13 @@ const LiveQueueWidget = () => {
     const [appointment, setAppointment] = useState(null);
     const [queueStatus, setQueueStatus] = useState(null);
     const [user, setUser] = useState(null);
-    const [isQueueFinished, setIsQueueFinished] = useState(false); // To track if the turn has passed
+    const [isQueueFinished, setIsQueueFinished] = useState(false);
 
     const token = localStorage.getItem('token');
     const API_BASE_URL = 'http://localhost:5000/api';
+
+    // Ref for the appointment audio alert
+    const appointmentAudioRef = useRef(new Audio('/appointment-alert.mp3'));
 
     // Effect 1: Get user and fetch their latest appointment
     useEffect(() => {
@@ -75,21 +78,19 @@ const LiveQueueWidget = () => {
         };
     }, [queueStatus?.queueId]);
 
-    // Effect 4: Handle the widget's state based on the queue number
+    // Effect 4: Handle the widget's state and sound based on the queue number
     useEffect(() => {
         if (appointment && queueStatus) {
-            // Check if the user's turn has passed
             if (queueStatus.currentNumber > appointment.appointmentNumber) {
                 setIsQueueFinished(true);
-                setIsOpen(true); // Keep the widget open to show the message
+                setIsOpen(true);
             } 
-            // Check if it's currently the user's turn
             else if (appointment.appointmentNumber === queueStatus.currentNumber) {
-                setIsOpen(true); // Automatically open the widget
+                setIsOpen(true);
+                appointmentAudioRef.current.play().catch(e => console.error("Audio play failed:", e));
             }
         }
     }, [queueStatus, appointment]);
-
 
     if (!user || !appointment || !queueStatus) {
         return null;
@@ -123,7 +124,7 @@ const LiveQueueWidget = () => {
                             </div>
                         </div>
                         <p className="doctor-info">
-                            {appointment.doctorId?.name} at {appointment.hospitalId?.name}
+                            Dr. {appointment.doctorId?.name} at {appointment.hospitalId?.name}
                         </p>
                     </>
                 )}

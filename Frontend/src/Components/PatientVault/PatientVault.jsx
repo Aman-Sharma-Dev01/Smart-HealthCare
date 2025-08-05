@@ -13,8 +13,16 @@ const PatientVault = () => {
     const API_BASE_URL = 'http://localhost:5000/api';
 
     useEffect(() => {
-        if (!token) {
+        const loggedInUser = JSON.parse(localStorage.getItem('user'));
+
+        if (!token || !loggedInUser) {
             navigate('/login'); // Redirect if not authenticated
+            return;
+        }
+
+        // --- NEW: Redirect if the user is not a patient ---
+        if (loggedInUser.role !== 'patient') {
+            navigate('/'); // Redirect to homepage for non-patients
             return;
         }
 

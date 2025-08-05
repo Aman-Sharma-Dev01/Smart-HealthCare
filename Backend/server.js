@@ -75,6 +75,23 @@ io.on('connection', (socket) => {
   });
 });
 
+io.on('connection', (socket) => {
+  console.log(`User connected: ${socket.id} 🔌`);
+
+  // --- NEW: Room for individual user notifications ---
+  socket.on('join-user-room', (userId) => {
+      const userRoom = `user_${userId}`;
+      socket.join(userRoom);
+      console.log(`Socket ${socket.id} joined private room: ${userRoom}`);
+  });
+
+  // ... (existing room logic for queues and hospitals)
+
+  socket.on('disconnect', () => {
+    console.log(`User disconnected: ${socket.id}`);
+  });
+});
+
 // --- 7. Start the Server ---
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

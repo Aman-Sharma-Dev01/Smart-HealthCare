@@ -12,14 +12,16 @@ import Login from './Components/Login/Login';
 import HelpdeskDashboard from './Components/HelpdeskDashboard/HelpdeskDashboard';
 import BookAppointment from './Components/BookAppointment/BookAppointment';
 import LiveQueueWidget from './Components/LiveQueueWidget/LiveQueueWidget';
+import EmergencyWidget from './Components/EmergencyWidget/EmergencyWidget';
 const App = () => {
   return (
     <>
+    <EmergencyWidget/>
   <ChatBot/>
   <LiveQueueWidget/>
  <Routes>
         <Route path="*" element={<HomePage />} />
-        <Route path="/dashboard" element={<HospitalDashboard />} />
+        <Route path="/doctor-dashboard" element={<HospitalDashboard />} />
         <Route path="/summarizer" element={<VisionScanner/>} />
         <Route path="/userprofile" element={<UserProfile/>} />
         <Route path="/prescription" element={<PrescriptionUploader/>} />

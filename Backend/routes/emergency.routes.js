@@ -6,6 +6,6 @@ import { multerUpload, uploadToGCS } from '../middleware/upload.middleware.js';
 const router = express.Router();
 
 router.post('/alert', protect, multerUpload.single('image'), uploadToGCS, createEmergencyAlert);
-router.put('/manage/:emergencyId', protect, manageEmergency); // New
+router.put('/manage/:emergencyId', protect, manageEmergency); 
 
 export default router;

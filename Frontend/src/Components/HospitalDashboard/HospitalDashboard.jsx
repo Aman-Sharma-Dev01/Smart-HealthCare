@@ -1,198 +1,190 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { io } from "socket.io-client";
 import './HospitalDashboard.css';
 
 // --- Sub-component: Header ---
-const Header = () => {
-  return (
+const Header = ({ doctorName }) => (
     <header className="app-header">
-      <div className="title-container">
-        <span className="logo-icon">H</span>
-        <h1>MediQueue Hospital Management</h1>
-      </div>
-      <p className="subtitle">Patient Queue Management System</p>
+        <div className="title-container">
+            <span className="logo-icon">D</span>
+            <h1>Doctor's Dashboard</h1>
+        </div>
+        <p className="subtitle">Welcome, Dr. {doctorName}</p>
     </header>
-  );
-};
+);
 
-// --- Sub-component: Dashboard ---
-const Dashboard = ({ waitingCount, inProgressCount, completedCount, currentPatient, patients }) => {
-  const nextPatient = patients.find(p => p.status === 'Waiting');
-
-  return (
-    <div>
-      <div className="current-status-card">
-        <div className="live-indicator">
-          <span></span> Live
-        </div>
-        <p className="status-label">Now Being Diagnosed</p>
-        <p className="current-number">#{currentPatient ? currentPatient.id : 'N/A'}</p>
-        <p className="next-label">Next: #{nextPatient ? nextPatient.id : 'N/A'}</p>
-      </div>
-
-      <div className="summary-cards">
-        <div className="summary-card">
-          <p className="summary-value">{waitingCount}</p>
-          <p className="summary-label">Waiting</p>
-        </div>
-        <div className="summary-card">
-          <p className="summary-value">{inProgressCount}</p>
-          <p className="summary-label">In Progress</p>
-        </div>
-        <div className="summary-card">
-          <p className="summary-value">{completedCount}</p>
-          <p className="summary-label">Completed</p>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// --- Sub-component: QueueList ---
-const PatientItem = ({ patient, index }) => {
-  const waitingTime = index * 15; // 15 minutes per patient
-  const hours = Math.floor(waitingTime / 60);
-  const minutes = waitingTime % 60;
-
-  let timeEstimate = '';
-  if (patient.status === 'Waiting') {
-    if (hours > 0) timeEstimate += `${hours}h `;
-    if (minutes > 0 || hours === 0) timeEstimate += `${minutes} minutes`;
-  }
-
-  return (
-    <div className={`patient-item ${patient.status === 'In Progress' ? 'in-progress' : ''}`}>
-      <div className="patient-number">#{patient.id}</div>
-      <div className="patient-details">
-        <p className="patient-name">{patient.name}</p>
-        {patient.status === 'In Progress' ? (
-          <p className="patient-status in-progress-text">In Progress</p>
-        ) : (
-          <p className="patient-status">Position: {index} &nbsp;&middot;&nbsp; ~{timeEstimate}</p>
-        )}
-      </div>
-      {patient.status === 'In Progress' && <div className="status-dot"></div>}
-    </div>
-  );
-};
-
-const QueueList = ({ patients }) => {
-  const activePatients = patients.filter(p => p.status === 'In Progress' || p.status === 'Waiting');
-  const inProgressPatient = activePatients.find(p => p.status === 'In Progress');
-  const waitingPatients = activePatients.filter(p => p.status === 'Waiting');
-  const sortedPatients = inProgressPatient ? [inProgressPatient, ...waitingPatients] : waitingPatients;
-
-  return (
-    <div className="queue-list-container">
-      <h3>Queue Status</h3>
-      <div className="queue-items">
-        {sortedPatients.map((patient, index) => (
-          <PatientItem key={patient.id} patient={patient} index={index} />
-        ))}
-      </div>
-    </div>
-  );
-};
-
-// --- Sub-component: QuickActions ---
-const QuickActions = ({ onAddPatient, onCallNext }) => {
-  const [patientName, setPatientName] = useState('');
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onAddPatient(patientName);
-    setPatientName('');
-  };
-
-  return (
-    <div className="quick-actions-card">
-      <h3>Quick Actions</h3>
-      <div className="action-buttons">
-        <button className="action-btn secondary-btn">+ New Patient Check-in</button>
-        <button className="action-btn secondary-btn">◎ Full Queue Display</button>
-        <button className="action-btn primary-btn" onClick={onCallNext}>
-          Call Next Patient
-        </button>
-      </div>
-      <form className="add-patient-form" onSubmit={handleSubmit}>
-        <label htmlFor="patientName">Patient Name</label>
-        <input
-          type="text"
-          id="patientName"
-          placeholder="Enter patient name"
-          value={patientName}
-          onChange={(e) => setPatientName(e.target.value)}
-        />
-        <button type="submit" className="add-btn">Add Patient</button>
-      </form>
-    </div>
-  );
-};
-
-// --- Main HospitalDashboard Component ---
-function HospitalDashboard() {
-  const [patients, setPatients] = useState([
-    { id: 1, name: 'John Doe', status: 'In Progress' },
-    { id: 2, name: 'Jane Smith', status: 'Waiting' },
-    { id: 3, name: 'Bob Johnson', status: 'Waiting' },
-    { id: 4, name: 'Alice Brown', status: 'Waiting' },
-    { id: 5, name: 'Charlie Wilson', status: 'Waiting' },
-  ]);
-  const [nextId, setNextId] = useState(6);
-  const [completedCount, setCompletedCount] = useState(0);
-
-  // Derived state
-  const waitingCount = patients.filter(p => p.status === 'Waiting').length;
-  const inProgressPatient = patients.find(p => p.status === 'In Progress');
-
-  const handleAddPatient = (name) => {
-    if (!name.trim()) return;
-    const newPatient = { id: nextId, name, status: 'Waiting' };
-    setPatients([...patients, newPatient]);
-    setNextId(nextId + 1);
-  };
-
-  const handleCallNextPatient = () => {
-    let newCompletedCount = completedCount;
-    const updatedPatients = [...patients];
+// --- Sub-component: Dashboard Stats ---
+const DashboardStats = ({ queueData }) => {
+    // Calculate stats based on the queue data
+    const waitingCount = queueData ? queueData.appointments.filter(a => a.appointmentNumber > queueData.currentNumber).length : 0;
+    const completedCount = queueData ? queueData.currentNumber : 0;
+    const inProgressCount = (queueData && queueData.currentNumber > 0 && queueData.currentNumber <= queueData.lastAppointmentNumber) ? 1 : 0;
     
-    const currentPatientIndex = updatedPatients.findIndex(p => p.status === 'In Progress');
-    if (currentPatientIndex !== -1) {
-      updatedPatients[currentPatientIndex].status = 'Completed';
-      newCompletedCount++;
+    const currentPatient = queueData?.appointments.find(a => a.appointmentNumber === queueData.currentNumber);
+    const nextPatient = queueData?.appointments.find(a => a.appointmentNumber === queueData.currentNumber + 1);
+
+    return (
+        <div>
+            <div className="current-status-card">
+                <div className="live-indicator"><span></span> Live</div>
+                <p className="status-label">Now Serving</p>
+                <p className="current-number">#{currentPatient ? currentPatient.appointmentNumber : 'N/A'}</p>
+                <p className="patient-name-display">{currentPatient ? currentPatient.patientName : 'No Patient'}</p>
+                <p className="next-label">Next: #{nextPatient ? nextPatient.appointmentNumber : 'N/A'}</p>
+            </div>
+            <div className="summary-cards">
+                <div className="summary-card"><p className="summary-value">{waitingCount}</p><p className="summary-label">Waiting</p></div>
+                <div className="summary-card"><p className="summary-value">{inProgressCount}</p><p className="summary-label">In Progress</p></div>
+                <div className="summary-card"><p className="summary-value">{completedCount}</p><p className="summary-label">Completed</p></div>
+            </div>
+        </div>
+    );
+};
+
+// --- Sub-component: Queue List ---
+const QueueList = ({ queueData }) => {
+    if (!queueData || queueData.appointments.length === 0) {
+        return (
+            <div className="queue-list-container">
+                <h3>Today's Queue</h3>
+                <p className="no-patients-message">No patients have booked an appointment yet.</p>
+            </div>
+        );
     }
 
-    const firstWaitingPatientIndex = updatedPatients.findIndex(p => p.status === 'Waiting');
-    if (firstWaitingPatientIndex !== -1) {
-      updatedPatients[firstWaitingPatientIndex].status = 'In Progress';
-    }
-    
-    setCompletedCount(newCompletedCount);
-    setPatients(updatedPatients.filter(p => p.status !== 'Completed'));
-  };
+    const activeAppointments = queueData.appointments
+        .filter(a => a.appointmentNumber >= queueData.currentNumber)
+        .sort((a, b) => a.appointmentNumber - b.appointmentNumber);
 
-  return (
-    <div className="app-layout">
-      <Header />
-      <main className="main-content">
-        <div className="left-column">
-          <Dashboard
-            waitingCount={waitingCount}
-            inProgressCount={inProgressPatient ? 1 : 0}
-            completedCount={completedCount}
-            currentPatient={inProgressPatient}
-            patients={patients}
-          />
-          <QueueList patients={patients} />
+    return (
+        <div className="queue-list-container">
+            <h3>Today's Queue</h3>
+            <div className="queue-items">
+                {activeAppointments.length > 0 ? activeAppointments.map((appointment) => (
+                    <div key={appointment._id} className={`patient-item ${appointment.appointmentNumber === queueData.currentNumber ? 'in-progress' : ''}`}>
+                        <div className="patient-number">#{appointment.appointmentNumber}</div>
+                        <div className="patient-details">
+                            <p className="patient-name">{appointment.patientName}</p>
+                            <p className="patient-status">{appointment.reasonForVisit}</p>
+                        </div>
+                        {appointment.appointmentNumber === queueData.currentNumber && <div className="status-dot"></div>}
+                    </div>
+                )) : <p className="no-patients-message">All appointments for today are complete.</p>}
+            </div>
         </div>
-        <div className="right-column">
-          <QuickActions
-            onAddPatient={handleAddPatient}
-            onCallNext={handleCallNextPatient}
-          />
+    );
+};
+
+// --- Sub-component: Actions ---
+const QuickActions = ({ onCallNext, queueData }) => {
+    const isQueueEnded = queueData ? queueData.currentNumber >= queueData.lastAppointmentNumber : true;
+    return (
+        <div className="quick-actions-card">
+            <h3>Quick Actions</h3>
+            <button 
+                className="action-btn primary-btn" 
+                onClick={onCallNext}
+                disabled={!queueData || isQueueEnded}
+            >
+                {isQueueEnded ? 'End of Queue' : 'Call Next Patient'}
+            </button>
         </div>
-      </main>
-    </div>
-  );
+    );
+};
+
+
+// --- Main DoctorDashboard Component ---
+function DoctorDashboard() {
+    const [user, setUser] = useState(null);
+    const [queueData, setQueueData] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState('');
+    
+    const navigate = useNavigate();
+    const token = localStorage.getItem('token');
+    const API_BASE_URL = 'http://localhost:5000/api';
+
+    useEffect(() => {
+        const loggedInUser = JSON.parse(localStorage.getItem('user'));
+        if (!token || !loggedInUser || loggedInUser.role !== 'doctor') {
+            navigate('/login-register');
+            return;
+        }
+        setUser(loggedInUser);
+
+        const fetchQueue = async () => {
+            try {
+                const response = await fetch(`${API_BASE_URL}/queues/my-queue`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) throw new Error('Failed to fetch queue.');
+                const data = await response.json();
+                setQueueData(data);
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        fetchQueue();
+    }, [token, navigate]);
+
+    // Real-time updates with Socket.IO
+    useEffect(() => {
+        if (!queueData?._id) return;
+
+        const socket = io("http://localhost:5000");
+        socket.emit('join-queue-room', queueData._id);
+
+        // Listener for when the doctor advances the queue
+        socket.on('queue-update', (data) => {
+            setQueueData(prev => ({ ...prev, currentNumber: data.currentNumber }));
+        });
+
+        // Listener for when a new patient books an appointment
+        socket.on('new-appointment', (updatedQueue) => {
+            console.log('New appointment received, updating queue:', updatedQueue);
+            setQueueData(updatedQueue);
+        });
+
+        return () => socket.disconnect();
+    }, [queueData?._id]);
+
+    const handleCallNext = async () => {
+        if (!queueData?._id) return;
+        try {
+            const response = await fetch(`${API_BASE_URL}/queues/next/${queueData._id}`, {
+                method: 'PUT',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) {
+                const data = await response.json();
+                throw new Error(data.message || 'Failed to advance queue.');
+            }
+            // State updates via the socket event, so no local state change is needed here.
+        } catch (err) {
+            alert(err.message); // Using alert for simple error feedback
+        }
+    };
+
+    if (isLoading) return <div className="loading-state">Loading Dashboard...</div>;
+    if (error) return <div className="error-state">Error: {error}</div>;
+
+    return (
+        <div className="app-layout">
+            <Header doctorName={user?.name.split(' ').slice(1).join(' ')} />
+            <main className="main-content">
+                <div className="left-column">
+                    <DashboardStats queueData={queueData} />
+                    <QueueList queueData={queueData} />
+                </div>
+                <div className="right-column">
+                    <QuickActions onCallNext={handleCallNext} queueData={queueData} />
+                </div>
+            </main>
+        </div>
+    );
 }
 
-export default HospitalDashboard;
+export default DoctorDashboard;

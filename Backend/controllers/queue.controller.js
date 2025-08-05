@@ -98,3 +98,26 @@ export const advanceQueue = async (req, res) => {
     res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
+
+// --- NEW FUNCTION ---
+export const getMyQueue = async (req, res) => {
+    const doctorId = req.user.id;
+    const today = new Date().toISOString().slice(0, 10);
+
+    try {
+        const queue = await Queue.findOne({ doctorId, date: today })
+            .populate({
+                path: 'appointments',
+                select: 'patientName reasonForVisit appointmentNumber status' // Select fields you need
+            });
+
+        // If no appointments today, it's not an error, just return an empty state
+        if (!queue) {
+            return res.json(null);
+        }
+        
+        res.json(queue);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};

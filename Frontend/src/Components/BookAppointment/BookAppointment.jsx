@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './BookAppointment.css';
+import { BACKEND_API_URL } from '../../util';
 
 // A simple Toast component for notifications
 const Toast = ({ message, type, onDismiss }) => {
@@ -26,12 +27,20 @@ const BookAppointment = () => {
 
     const navigate = useNavigate();
     const token = localStorage.getItem('token');
-    const API_BASE_URL = 'http://localhost:5000/api';
+    const API_BASE_URL = BACKEND_API_URL;
 
     // --- UPDATED: Fetch nearby hospitals based on user's location ---
     useEffect(() => {
-        if (!token) {
+        const loggedInUser = JSON.parse(localStorage.getItem('user'));
+
+        if (!token || !loggedInUser) {
             navigate('/login-register');
+            return;
+        }
+
+        // --- NEW: Redirect if the user is not a patient ---
+        if (loggedInUser.role !== 'patient') {
+            navigate('*'); // Redirect to homepage
             return;
         }
 
@@ -67,7 +76,6 @@ const BookAppointment = () => {
         if (selectedHospital) {
             const fetchDoctors = async () => {
                 try {
-                    // NOTE: Ensure your backend has this route: GET /api/doctors/by-hospital/:hospitalName
                     const response = await fetch(`${API_BASE_URL}/doctors/by-hospital/${encodeURIComponent(selectedHospital)}`, {
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
