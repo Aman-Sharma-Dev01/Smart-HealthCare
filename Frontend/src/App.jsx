@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import HospitalDashboard from './Components/HospitalDashboard/HospitalDashboard';
 import HomePage from './Components/HomePage/HomePage';
 import PrescriptionUploader from './Components/PrescriptionUploader/PrescriptionUploader';
@@ -8,11 +8,11 @@ import VisionScanner from './Components/VisionScanner/VisionScanner';
 import ChatBot from './Components/ChatBot/ChatBot';
 import UserProfile from './Components/UserProfile/UserProfile';
 
-
+import Login from './Components/Login/Login';
+import HelpdeskDashboard from './Components/HelpdeskDashboard/HelpdeskDashboard';
 const App = () => {
   return (
-
-      <Routes>
+ <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/dashboard" element={<HospitalDashboard />} />
         <Route path="/summarizer" element={<VisionScanner/>} />
@@ -28,6 +28,7 @@ const App = () => {
 
       // <ChatBot/>
     
+
 
   );
 };

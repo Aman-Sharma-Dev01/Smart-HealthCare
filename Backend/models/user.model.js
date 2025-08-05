@@ -8,14 +8,13 @@ const userSchema = new mongoose.Schema({
   phone: { type: String, required: true, unique: true },
   role: {
     type: String,
-    enum: ['patient', 'doctor'],
+    enum: ['patient', 'doctor', 'helpdesk'], // Updated
     default: 'patient',
   },
-  // --- Fields for Doctors only ---
   hospitalName: {
     type: String,
-    // This field is required only if the role is 'doctor'
-    required: function() { return this.role === 'doctor'; }
+    // Updated: Required if the role is 'doctor' or 'helpdesk'
+    required: function() { return this.role === 'doctor' || this.role === 'helpdesk'; }
   },
   designation: {
     type: String,

@@ -3,25 +3,29 @@ import User from '../models/user.model.js';
 import Hospital from '../models/hospital.model.js';
 
 export const getMyHospitalNotifications = async (req, res) => {
-  const doctorId = req.user.id;
+  const userId = req.user.id;
 
   try {
-    // Find the hospital the logged-in doctor belongs to
-    const doctor = await User.findById(doctorId);
-    if (!doctor || doctor.role !== 'doctor') {
-      return res.status(403).json({ message: 'Access denied. Only for doctors.' });
+    // Find the user (could be a doctor or helpdesk staff)
+    const user = await User.findById(userId);
+
+    // --- THIS IS THE CORRECTED LOGIC ---
+    // Check if the user has the correct role (doctor OR helpdesk)
+    if (!user || (user.role !== 'doctor' && user.role !== 'helpdesk')) {
+      return res.status(403).json({ message: 'Access denied. For hospital staff only.' });
     }
 
-    const hospital = await Hospital.findOne({ name: doctor.hospitalName });
+    // Find the hospital associated with this user
+    const hospital = await Hospital.findOne({ name: user.hospitalName });
     if (!hospital) {
-      return res.status(404).json({ message: 'Hospital associated with this doctor not found.' });
+      return res.status(404).json({ message: 'Hospital associated with this user not found.' });
     }
 
     // Fetch all notifications for that hospital
     const notifications = await Notification.find({ hospitalId: hospital._id })
       .sort({ createdAt: -1 })
       .populate('patientId', 'name phone') // Get patient details
-      .populate('emergencyId', 'location emergencyType imagePath'); // Get emergency details
+      .populate('emergencyId', 'location emergencyType incidentType imagePath'); // Get emergency details
 
     res.json(notifications);
   } catch (error) {

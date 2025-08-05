@@ -1,0 +1,141 @@
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+/* --- Base Styles --- */
+body {
+    font-family: "Poppins", sans-serif;
+    background-color: #eaf0f7;
+    color: #333;
+}
+
+.auth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2rem;
+}
+
+/* --- Card --- */
+.auth-card {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    background-color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 82, 212, 0.1);
+    overflow: hidden;
+}
+
+/* --- Form Container & Animation --- */
+.auth-form-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(0.98);
+    transition: opacity 0.4s ease-in-out, transform 0.4s ease-in-out;
+}
+
+.auth-form-container.active {
+    position: static; /* Let it take up space in the document flow */
+    opacity: 1;
+    pointer-events: auto;
+    transform: scale(1);
+}
+
+.auth-form {
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* --- Form Elements --- */
+.form-title {
+    font-size: 1.75rem;
+    font-weight: 600;
+    color: #1a2b4d;
+    margin-bottom: -5px;
+}
+
+.form-subtitle {
+    font-size: 0.95rem;
+    color: #6a7a99;
+    margin-bottom: 1rem;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #4a5b7d;
+    margin-bottom: 0.5rem;
+}
+
+.input-group input,
+.input-group select {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid #d9e2f1;
+    border-radius: 8px;
+    font-size: 1rem;
+    background-color: #f7f9fc;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.input-group input:focus,
+.input-group select:focus {
+    outline: none;
+    border-color: #5995fd;
+    box-shadow: 0 0 0 3px rgba(89, 149, 253, 0.25);
+}
+
+/* --- Buttons and Links --- */
+.btn-primary {
+    background-color: #5995fd;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 0.8rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    margin-top: 1rem;
+}
+
+.btn-primary:hover {
+    background-color: #4d84e2;
+}
+
+.toggle-text {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #6a7a99;
+    margin-top: 1rem;
+}
+
+.toggle-text span {
+    color: #5995fd;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* --- Conditional Fields Animation --- */
+.conditional-field {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.5s ease-out, margin-top 0.5s ease-out;
+    margin-top: -1rem; /* Collapse margin when hidden */
+}
+
+.conditional-field.visible {
+    max-height: 100px; /* Adjust as needed */
+    margin-top: 0;
+}

@@ -4,26 +4,29 @@ const emergencySchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   location: {
     type: { type: String, enum: ['Point'], required: true },
-    coordinates: { type: [Number], required: true }, // [longitude, latitude]
+    coordinates: { type: [Number], required: true },
   },
-  // For whom the emergency is (self, family, etc.)
   emergencyType: {
     type: String,
     enum: ['self', 'family', 'other'],
     required: true,
   },
-  // What the emergency is (accident, heart attack, etc.)
-  incidentType: { // <-- NEW FIELD
+  incidentType: {
     type: String,
     enum: ['accident', 'heart attack', 'fire', 'stroke', 'other'],
     required: true,
   },
-  imagePath: { type: String }, // Optional path to an uploaded photo
+  imagePath: { type: String },
   status: {
     type: String,
     enum: ['new', 'acknowledged', 'resolved'],
     default: 'new',
   },
+  actionLog: [{ // New
+    action: String,
+    by: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    timestamp: { type: Date, default: Date.now }
+  }]
 }, { timestamps: true });
 
 const Emergency = mongoose.model('Emergency', emergencySchema);
