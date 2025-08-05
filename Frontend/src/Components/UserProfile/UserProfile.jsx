@@ -38,6 +38,19 @@ const PatientDashboard = ({
                         <option>Prescription</option>
                         <option>Lab Test</option>
                         <option>X-Ray</option>
+                        <option>CT Scan</option>
+                        <option>MRI</option>
+                        <option>Ultrasound</option>
+                        <option>ECG</option>
+                        <option>Discharge Summary</option>
+                        <option>Blood Report</option>
+                        <option>Pathology Report</option>
+                        <option>Radiology Report</option>
+                        <option>Operative Report</option>
+                        <option>Consultation Note</option>
+                        <option>Immunization Record</option>
+                        <option>Hospital Bill</option>
+                        <option>Dental Record</option>
                         <option>Other</option>
                     </select>
                 </div>
