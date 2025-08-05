@@ -26,6 +26,39 @@ body {
     overflow: hidden;
 }
 
+/* --- Logo Header --- */
+.auth-header {
+    display: flex;
+    justify-content: center;
+    padding: 2rem 2.5rem 0;
+    flex-direction: column;
+    align-items: center;
+}
+
+
+
+
+
+
+
+.auth-logo-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.auth-logo {
+    height: 50px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+
+
+
+
+
 /* --- Form Container & Animation --- */
 .auth-form-container {
     position: absolute;
@@ -39,14 +72,14 @@ body {
 }
 
 .auth-form-container.active {
-    position: static; /* Let it take up space in the document flow */
+    position: static;
     opacity: 1;
     pointer-events: auto;
     transform: scale(1);
 }
 
 .auth-form {
-    padding: 2.5rem;
+    padding: 0 2.5rem 2.5rem;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -54,6 +87,7 @@ body {
 
 /* --- Form Elements --- */
 .form-title {
+    text-align: center;
     font-size: 1.75rem;
     font-weight: 600;
     color: #1a2b4d;
@@ -61,6 +95,7 @@ body {
 }
 
 .form-subtitle {
+    text-align: center;
     font-size: 0.95rem;
     color: #6a7a99;
     margin-bottom: 1rem;
@@ -132,10 +167,25 @@ body {
     max-height: 0;
     overflow: hidden;
     transition: max-height 0.5s ease-out, margin-top 0.5s ease-out;
-    margin-top: -1rem; /* Collapse margin when hidden */
+    margin-top: -1rem;
 }
 
 .conditional-field.visible {
-    max-height: 100px; /* Adjust as needed */
+    max-height: 100px;
     margin-top: 0;
 }
+
+/* --- Error Message --- */
+.error-message {
+    color: #e53e3e;
+    background-color: #fff5f5;
+    border: 1px solid #fc8181;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+
+/* --- Logo Styling --- */
+
