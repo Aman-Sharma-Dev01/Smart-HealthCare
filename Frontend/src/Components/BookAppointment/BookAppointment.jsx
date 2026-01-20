@@ -121,6 +121,10 @@ const BookAppointment = () => {
             if (!response.ok) throw new Error(data.message || 'Booking failed.');
 
             showToast(`Appointment #${data.appointmentNumber} confirmed!`);
+            
+            // Dispatch custom event to update LiveQueueWidget immediately
+            window.dispatchEvent(new CustomEvent('appointmentBooked'));
+            
             setTimeout(() => navigate('/profile'), 2000);
         } catch (err) {
             showToast(err.message, 'error');
@@ -129,7 +133,23 @@ const BookAppointment = () => {
         }
     };
 
-    if (isLoading) return <div className="loading-state">Getting your location to find nearby hospitals...</div>;
+    if (isLoading) {
+        return (
+            <div className="loading-container">
+                <div className="loading-card">
+                    <div className="loading-spinner"></div>
+                    <div className="loading-icon">📍</div>
+                    <h3>Finding Nearby Hospitals</h3>
+                    <p>We're getting your location to show you the closest healthcare facilities...</p>
+                    <div className="loading-dots">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="booking-wrapper">

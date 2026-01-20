@@ -138,6 +138,11 @@ const ServiceCard = ({ icon, title, description, onClick }) => (
 const ServicesSection = () => {
   const navigate = useNavigate();
 
+  const handleQueueStatusClick = () => {
+    // Dispatch event to open the LiveQueueWidget
+    window.dispatchEvent(new CustomEvent('openQueueWidget'));
+  };
+
   return (
     <section id="services" className="services-section">
       <h2>Our Core Services</h2>
@@ -145,7 +150,7 @@ const ServicesSection = () => {
         <ServiceCard icon="📅" title="Book Appointments" description="Easily schedule visits with our specialized doctors online." onClick={() => navigate('/appointment-booking')} />
         <ServiceCard icon="📄" title="View Medical Records" description="Access your health records and lab results securely anytime." onClick={() => navigate('/vault')} />
         <ServiceCard icon="🚑" title="Emergency Services" description="24/7 emergency care for urgent medical needs." />
-        <ServiceCard icon="📊" title="Live Queue Status" description="Check the real-time status of your appointment queue from home." />
+        <ServiceCard icon="📊" title="Live Queue Status" description="Check the real-time status of your appointment queue from home." onClick={handleQueueStatusClick} />
       </div>
     </section>
   );

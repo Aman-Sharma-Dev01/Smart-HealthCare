@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { io } from "socket.io-client";
 import './LiveQueueWidget.css';
 import { BACKEND_API_URL, SocketIO_URL } from '../../util';
@@ -9,6 +9,7 @@ const LiveQueueWidget = () => {
     const [queueStatus, setQueueStatus] = useState(null);
     const [user, setUser] = useState(null);
     const [isQueueFinished, setIsQueueFinished] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
 
     const token = localStorage.getItem('token');
     const API_BASE_URL = BACKEND_API_URL;
@@ -16,31 +17,67 @@ const LiveQueueWidget = () => {
     // Ref for the appointment audio alert
     const appointmentAudioRef = useRef(new Audio('/appointment-alert.mp3'));
 
+    // Fetch latest appointment function - made reusable
+    const fetchLatestAppointment = useCallback(async () => {
+        if (!token) {
+            setIsLoading(false);
+            return;
+        }
+        setIsLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/appointments/my-latest`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                setAppointment(data);
+                setIsQueueFinished(false); // Reset finished state for new appointment
+            } else {
+                setAppointment(null);
+            }
+        } catch (error) {
+            console.error("Failed to fetch latest appointment:", error);
+            setAppointment(null);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [token, API_BASE_URL]);
+
     // Effect 1: Get user and fetch their latest appointment
     useEffect(() => {
         const loggedInUser = JSON.parse(localStorage.getItem('user'));
         if (loggedInUser && loggedInUser.role === 'patient') {
             setUser(loggedInUser);
+            fetchLatestAppointment();
         } else {
-            return;
+            setUser(null);
+            setIsLoading(false);
         }
+    }, [fetchLatestAppointment]);
 
-        const fetchLatestAppointment = async () => {
-            if (!token) return;
-            try {
-                const res = await fetch(`${API_BASE_URL}/appointments/my-latest`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setAppointment(data);
-                }
-            } catch (error) {
-                console.error("Failed to fetch latest appointment:", error);
-            }
+    // Effect: Listen for appointment booked event
+    useEffect(() => {
+        const handleAppointmentBooked = () => {
+            fetchLatestAppointment();
         };
-        fetchLatestAppointment();
-    }, [token]);
+
+        window.addEventListener('appointmentBooked', handleAppointmentBooked);
+        return () => {
+            window.removeEventListener('appointmentBooked', handleAppointmentBooked);
+        };
+    }, [fetchLatestAppointment]);
+
+    // Effect: Listen for open queue widget event (from HomePage service card)
+    useEffect(() => {
+        const handleOpenWidget = () => {
+            setIsOpen(true);
+        };
+
+        window.addEventListener('openQueueWidget', handleOpenWidget);
+        return () => {
+            window.removeEventListener('openQueueWidget', handleOpenWidget);
+        };
+    }, []);
 
     // Effect 2: Fetch initial queue status once an appointment is found
     useEffect(() => {
@@ -93,11 +130,13 @@ const LiveQueueWidget = () => {
         }
     }, [queueStatus, appointment]);
 
-    if (!user || !appointment || !queueStatus) {
+    // Don't show widget if user is not a patient
+    if (!user) {
         return null;
     }
 
-    const isMyTurn = appointment.appointmentNumber === queueStatus.currentNumber;
+    const isMyTurn = appointment && queueStatus && appointment.appointmentNumber === queueStatus.currentNumber;
+    const hasAppointment = appointment && queueStatus;
 
     return (
         <div className={`live-queue-widget ${isOpen ? 'open' : ''} ${isMyTurn ? 'my-turn' : ''}`}>
@@ -105,7 +144,19 @@ const LiveQueueWidget = () => {
                 <i className={`fas ${isOpen ? 'fa-times' : (isMyTurn ? 'fa-bell' : 'fa-users')}`}></i>
             </button>
             <div className="widget-content">
-                {isQueueFinished ? (
+                {isLoading ? (
+                    <div className="queue-loading-state">
+                        <div className="mini-spinner"></div>
+                        <p>Loading queue status...</p>
+                    </div>
+                ) : !hasAppointment ? (
+                    <div className="no-appointment-state">
+                        <div className="no-appointment-icon">📅</div>
+                        <h4>No Active Appointment</h4>
+                        <p>You don't have any upcoming appointments. Book one to see your queue status here!</p>
+                        <a href="/appointment-booking" className="book-now-btn">Book Appointment</a>
+                    </div>
+                ) : isQueueFinished ? (
                     <div className="queue-finished-message">
                         <i className="fas fa-check-circle"></i>
                         <h4>Appointment Complete</h4>
