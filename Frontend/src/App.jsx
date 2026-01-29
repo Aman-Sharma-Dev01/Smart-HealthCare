@@ -11,9 +11,12 @@ import BookAppointment from './Components/BookAppointment/BookAppointment';
 import LiveQueueWidget from './Components/LiveQueueWidget/LiveQueueWidget';
 import EmergencyWidget from './Components/EmergencyWidget/EmergencyWidget';
 import ChatBot from './Components/Chatbot/ChatBot';
+import InstallPWA from './Components/InstallPWA/InstallPWA';
+
 const App = () => {
   return (
     <>
+    <InstallPWA />
     <EmergencyWidget/>
   <ChatBot/>
   <LiveQueueWidget/>
