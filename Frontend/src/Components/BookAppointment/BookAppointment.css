@@ -142,117 +142,248 @@ body {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
-/* Loading State Styles */
+/* ==========================================
+   PROFESSIONAL LOADING STATE STYLES
+   ========================================== */
+
 .loading-container {
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    padding: 1rem;
-}
-
-.loading-card {
-    background: white;
-    border-radius: 24px;
-    padding: 3rem 2.5rem;
-    text-align: center;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-    max-width: 400px;
-    width: 100%;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+    padding: 1.5rem;
     position: relative;
     overflow: hidden;
 }
 
-.loading-card::before {
+/* Subtle background pattern */
+.loading-container::before {
     content: '';
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #667eea, #764ba2, #667eea);
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite linear;
+    bottom: 0;
+    background-image: 
+        radial-gradient(circle at 25% 25%, rgba(89, 149, 253, 0.05) 0%, transparent 50%),
+        radial-gradient(circle at 75% 75%, rgba(102, 126, 234, 0.05) 0%, transparent 50%);
+    pointer-events: none;
 }
 
-@keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-}
-
-.loading-spinner {
-    width: 80px;
-    height: 80px;
-    border: 4px solid #f3f4f6;
-    border-top: 4px solid #667eea;
-    border-radius: 50%;
-    margin: 0 auto 1.5rem;
-    animation: spin 1s linear infinite;
+.loading-card {
+    background: white;
+    border-radius: 20px;
+    padding: 2.5rem;
+    box-shadow: 
+        0 4px 6px -1px rgba(0, 0, 0, 0.05),
+        0 10px 15px -3px rgba(0, 0, 0, 0.08),
+        0 20px 25px -5px rgba(0, 0, 0, 0.05);
+    max-width: 420px;
+    width: 100%;
     position: relative;
+    z-index: 1;
+    animation: cardEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes cardEntrance {
+    0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.98);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Location Visual Animation */
+.loading-visual {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 2rem;
+}
+
+.location-pulse {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pulse-ring {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 2px solid var(--primary-color);
+    opacity: 0;
+    animation: pulseRing 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+.pulse-ring:nth-child(1) { animation-delay: 0s; }
+.pulse-ring:nth-child(2) { animation-delay: 0.5s; }
+.pulse-ring:nth-child(3) { animation-delay: 1s; }
+
+@keyframes pulseRing {
+    0% {
+        transform: scale(0.5);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+}
+
+.location-pin {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, var(--primary-color) 0%, #4d84e2 100%);
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 24px rgba(89, 149, 253, 0.35);
+    animation: pinFloat 2s ease-in-out infinite;
+}
+
+.location-pin svg {
+    width: 28px;
+    height: 28px;
+    color: white;
+    transform: rotate(45deg);
+}
+
+@keyframes pinFloat {
+    0%, 100% { transform: rotate(-45deg) translateY(0); }
+    50% { transform: rotate(-45deg) translateY(-8px); }
+}
+
+/* Loading Content */
+.loading-content {
+    text-align: center;
+}
+
+.loading-content h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin: 0 0 0.5rem 0;
+    letter-spacing: -0.02em;
+}
+
+.loading-content p {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin: 0 0 1.75rem 0;
+    line-height: 1.5;
+}
+
+/* Progress Bar */
+.loading-progress {
+    height: 4px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    margin-bottom: 1.75rem;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    width: 40%;
+    background: linear-gradient(90deg, var(--primary-color), #4d84e2);
+    border-radius: 4px;
+    animation: progressMove 1.8s ease-in-out infinite;
+}
+
+@keyframes progressMove {
+    0% {
+        width: 0%;
+        margin-left: 0%;
+    }
+    50% {
+        width: 60%;
+        margin-left: 20%;
+    }
+    100% {
+        width: 0%;
+        margin-left: 100%;
+    }
+}
+
+/* Loading Steps */
+.loading-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    text-align: left;
+}
+
+.step {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    padding: 0.625rem 0.875rem;
+    background: #f8fafc;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+}
+
+.step.active {
+    background: linear-gradient(135deg, rgba(89, 149, 253, 0.1) 0%, rgba(77, 132, 226, 0.1) 100%);
+    border: 1px solid rgba(89, 149, 253, 0.2);
+}
+
+.step-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+    background: #e2e8f0;
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
+.step.active .step-icon {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #4d84e2 100%);
+    color: white;
+}
+
+.step span {
+    font-size: 0.875rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.step.active span {
+    color: #334155;
+}
+
+/* Mini Spinner for Steps */
+.mini-spinner {
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(148, 163, 184, 0.3);
+    border-top-color: #94a3b8;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+.step.active .mini-spinner {
+    border-color: rgba(255, 255, 255, 0.3);
+    border-top-color: white;
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-.loading-icon {
-    font-size: 2.5rem;
-    margin-bottom: 1rem;
-    animation: bounce 1s ease-in-out infinite;
-}
-
-@keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
-}
-
-.loading-card h3 {
-    font-size: 1.5rem;
-    color: #1f2937;
-    margin-bottom: 0.75rem;
-    font-weight: 600;
-}
-
-.loading-card p {
-    color: #6b7280;
-    font-size: 0.95rem;
-    line-height: 1.6;
-    margin-bottom: 1.5rem;
-}
-
-.loading-dots {
-    display: flex;
-    justify-content: center;
-    gap: 8px;
-}
-
-.loading-dots span {
-    width: 10px;
-    height: 10px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 50%;
-    animation: pulse-dot 1.4s ease-in-out infinite;
-}
-
-.loading-dots span:nth-child(2) {
-    animation-delay: 0.2s;
-}
-
-.loading-dots span:nth-child(3) {
-    animation-delay: 0.4s;
-}
-
-@keyframes pulse-dot {
-    0%, 80%, 100% {
-        transform: scale(0.6);
-        opacity: 0.5;
-    }
-    40% {
-        transform: scale(1);
-        opacity: 1;
-    }
+    to { transform: rotate(360deg); }
 }
 
 /* Loading State (Simple fallback) */
@@ -263,4 +394,43 @@ body {
     min-height: 100vh;
     font-size: 1.1rem;
     color: #6b7280;
+}
+
+/* Responsive adjustments for loading */
+@media (max-width: 480px) {
+    .loading-card {
+        padding: 2rem 1.5rem;
+        border-radius: 16px;
+    }
+    
+    .location-pulse {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .location-pin {
+        width: 48px;
+        height: 48px;
+    }
+    
+    .location-pin svg {
+        width: 24px;
+        height: 24px;
+    }
+    
+    .loading-content h3 {
+        font-size: 1.25rem;
+    }
+    
+    .loading-content p {
+        font-size: 0.875rem;
+    }
+    
+    .step {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .step span {
+        font-size: 0.8rem;
+    }
 }
