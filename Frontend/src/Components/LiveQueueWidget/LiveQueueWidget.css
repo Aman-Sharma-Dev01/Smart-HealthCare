@@ -207,3 +207,38 @@
     font-size: 0.9rem;
     margin: 0;
 }
+
+/* PWA Standalone Mode Adjustments */
+@media all and (display-mode: standalone) {
+    .live-queue-widget {
+        bottom: calc(24px + env(safe-area-inset-bottom));
+        right: 80px;
+    }
+    
+    .widget-toggle-btn {
+        width: 56px;
+        height: 56px;
+        font-size: 22px;
+        box-shadow: 0 4px 16px rgba(0, 123, 255, 0.35);
+    }
+    
+    .widget-content {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.15);
+        max-height: calc(70vh - env(safe-area-inset-bottom));
+    }
+    
+    .widget-header {
+        border-radius: 20px 20px 0 0;
+        padding: 1rem 1.25rem;
+    }
+    
+    .widget-body {
+        padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    }
+}

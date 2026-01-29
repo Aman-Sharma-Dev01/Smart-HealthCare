@@ -4,6 +4,7 @@ import './InstallPWA.css';
 const InstallPWA = () => {
     const [deferredPrompt, setDeferredPrompt] = useState(null);
     const [showInstallBanner, setShowInstallBanner] = useState(false);
+    const [isMinimized, setIsMinimized] = useState(false);
     const [isInstalled, setIsInstalled] = useState(false);
     const [isIOS, setIsIOS] = useState(false);
     const [showIOSInstructions, setShowIOSInstructions] = useState(false);
@@ -15,28 +16,29 @@ const InstallPWA = () => {
             return;
         }
 
-        // Check if dismissed recently (within 7 days)
+        // Check if dismissed recently (within 3 hours)
         const dismissedTime = localStorage.getItem('pwa-install-dismissed');
-        if (dismissedTime && Date.now() - parseInt(dismissedTime) < 7 * 24 * 60 * 60 * 1000) {
+        if (dismissedTime && Date.now() - parseInt(dismissedTime) < 3 * 60 * 60 * 1000) {
             return;
+        }
+
+        // Check if minimized in this session
+        const wasMinimized = sessionStorage.getItem('pwa-install-minimized');
+        if (wasMinimized) {
+            setIsMinimized(true);
         }
 
         // Detect iOS
         const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         setIsIOS(isIOSDevice);
 
-        // For iOS, show banner after delay
-        if (isIOSDevice) {
-            const timer = setTimeout(() => setShowInstallBanner(true), 3000);
-            return () => clearTimeout(timer);
-        }
-
         // Listen for beforeinstallprompt event (Chrome, Edge, etc.)
         const handleBeforeInstallPrompt = (e) => {
             e.preventDefault();
             setDeferredPrompt(e);
-            // Show banner after a short delay for better UX
-            setTimeout(() => setShowInstallBanner(true), 3000);
+            if (!wasMinimized) {
+                setShowInstallBanner(true);
+            }
         };
 
         window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
@@ -45,11 +47,20 @@ const InstallPWA = () => {
         window.addEventListener('appinstalled', () => {
             setIsInstalled(true);
             setShowInstallBanner(false);
+            setIsMinimized(false);
             setDeferredPrompt(null);
         });
 
+        // Show banner after 2 seconds if not minimized
+        const showTimer = setTimeout(() => {
+            if (!wasMinimized) {
+                setShowInstallBanner(true);
+            }
+        }, 2000);
+
         return () => {
             window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+            clearTimeout(showTimer);
         };
     }, []);
 
@@ -69,6 +80,8 @@ const InstallPWA = () => {
         
         if (outcome === 'accepted') {
             console.log('User accepted PWA install');
+            setIsMinimized(false);
+            sessionStorage.removeItem('pwa-install-minimized');
         } else {
             console.log('User dismissed PWA install');
         }
@@ -80,22 +93,45 @@ const InstallPWA = () => {
     const handleDismiss = () => {
         setShowInstallBanner(false);
         setShowIOSInstructions(false);
+        setIsMinimized(false);
         localStorage.setItem('pwa-install-dismissed', Date.now().toString());
+        sessionStorage.removeItem('pwa-install-minimized');
     };
 
     const handleRemindLater = () => {
+        // Minimize instead of hide completely
         setShowInstallBanner(false);
         setShowIOSInstructions(false);
-        // Will show again in 24 hours
-        localStorage.setItem('pwa-install-dismissed', (Date.now() - 6 * 24 * 60 * 60 * 1000).toString());
+        setIsMinimized(true);
+        sessionStorage.setItem('pwa-install-minimized', 'true');
     };
 
-    if (isInstalled || !showInstallBanner) {
+    const handleExpandBanner = () => {
+        setIsMinimized(false);
+        setShowInstallBanner(true);
+        sessionStorage.removeItem('pwa-install-minimized');
+    };
+
+    // Don't render anything if already installed
+    if (isInstalled) {
         return null;
     }
 
     return (
         <>
+            {/* Minimized Install Reminder Button */}
+            <div 
+                className={`pwa-minimized-btn ${isMinimized ? 'show' : ''}`}
+                onClick={handleExpandBanner}
+                title="Install MediCare+ App"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                    <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
+                    <path d="M3.5 12.75a.75.75 0 00-1.5 0v2.5A2.75 2.75 0 004.75 18h10.5A2.75 2.75 0 0018 15.25v-2.5a.75.75 0 00-1.5 0v2.5c0 .69-.56 1.25-1.25 1.25H4.75c-.69 0-1.25-.56-1.25-1.25v-2.5z" />
+                </svg>
+                <span>Install</span>
+            </div>
+
             {/* Main Install Banner */}
             <div className={`pwa-install-banner ${showInstallBanner ? 'show' : ''}`}>
                 <div className="pwa-banner-content">

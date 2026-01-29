@@ -2,10 +2,79 @@
    PROFESSIONAL PWA INSTALL WIDGET STYLES
    ========================================== */
 
+/* Hide install banner completely in standalone mode */
+@media all and (display-mode: standalone) {
+    .pwa-install-banner,
+    .pwa-ios-overlay,
+    .pwa-minimized-btn {
+        display: none !important;
+    }
+}
+
+/* Minimized Install Button */
+.pwa-minimized-btn {
+    position: fixed;
+    bottom: 10rem;
+    right: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: linear-gradient(135deg, #5995fd 0%, #4d84e2 100%);
+    color: white;
+    border-radius: 50px;
+    box-shadow: 0 4px 15px rgba(89, 149, 253, 0.4);
+    cursor: pointer;
+    z-index: 99998;
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8);
+    transition: all 0.3s ease;
+}
+
+.pwa-minimized-btn.show {
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+}
+
+.pwa-minimized-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(89, 149, 253, 0.5);
+}
+
+.pwa-minimized-btn:active {
+    transform: scale(0.95);
+}
+
+.pwa-minimized-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+.pwa-minimized-btn span {
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Pulse animation for attention */
+.pwa-minimized-btn.show {
+    animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+    0%, 100% {
+        box-shadow: 0 4px 15px rgba(89, 149, 253, 0.4);
+    }
+    50% {
+        box-shadow: 0 4px 25px rgba(89, 149, 253, 0.7);
+    }
+}
+
 /* Main Install Banner */
 .pwa-install-banner {
     position: fixed;
-    bottom: -200px;
+    bottom: 1rem;
     left: 50%;
     transform: translateX(-50%);
     width: calc(100% - 2rem);
@@ -16,9 +85,16 @@
         0 -4px 6px -1px rgba(0, 0, 0, 0.05),
         0 -10px 15px -3px rgba(0, 0, 0, 0.1),
         0 4px 25px rgba(89, 149, 253, 0.15);
-    z-index: 9999;
-    transition: bottom 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 99999;
     overflow: hidden;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, visibility 0.4s ease;
+}
+
+.pwa-install-banner.show {
+    opacity: 1;
+    visibility: visible;
 }
 
 .pwa-install-banner::before {
@@ -29,10 +105,6 @@
     right: 0;
     height: 4px;
     background: linear-gradient(90deg, #5995fd, #4d84e2, #667eea);
-}
-
-.pwa-install-banner.show {
-    bottom: 1rem;
 }
 
 .pwa-banner-content {
@@ -366,14 +438,24 @@
 
 /* Mobile Responsive */
 @media (max-width: 480px) {
+    .pwa-minimized-btn {
+        bottom: 9rem;
+        right: 0.75rem;
+        padding: 0.6rem 0.9rem;
+    }
+    
+    .pwa-minimized-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .pwa-minimized-btn span {
+        font-size: 0.8rem;
+    }
+    
     .pwa-install-banner {
         width: calc(100% - 1rem);
         border-radius: 16px;
-        bottom: -200px;
-    }
-    
-    .pwa-install-banner.show {
-        bottom: 0.5rem;
     }
     
     .pwa-banner-content {
@@ -431,12 +513,7 @@
         left: auto;
         right: 1.5rem;
         transform: none;
-        bottom: -200px;
         max-width: 380px;
-    }
-    
-    .pwa-install-banner.show {
-        bottom: 1.5rem;
     }
     
     .pwa-ios-overlay {

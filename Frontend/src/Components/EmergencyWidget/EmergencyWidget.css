@@ -296,3 +296,51 @@ input[type="file"] {
     from { transform: translateX(100%); opacity: 0; }
     to { transform: translateX(0); opacity: 1; }
 }
+
+/* PWA Standalone Mode Adjustments */
+@media all and (display-mode: standalone) {
+  .emergency-widget {
+    bottom: calc(100px + env(safe-area-inset-bottom));
+    right: 16px;
+  }
+  
+  .sos-button {
+    width: 56px;
+    height: 56px;
+    font-size: 16px;
+    box-shadow: 0 4px 16px rgba(220, 53, 69, 0.4);
+  }
+  
+  .active-emergency-tracker {
+    position: fixed;
+    bottom: calc(170px + env(safe-area-inset-bottom));
+    right: 16px;
+    left: 16px;
+    width: auto;
+    max-width: 340px;
+  }
+  
+  .toast {
+    top: calc(16px + env(safe-area-inset-top));
+    right: 16px;
+    left: 16px;
+    max-width: none;
+  }
+  
+  .modal-overlay {
+    padding: 1rem;
+    padding-top: calc(1rem + env(safe-area-inset-top));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+    align-items: flex-end;
+  }
+  
+  .modal-content {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    border-radius: 20px 20px 0 0;
+    padding: 1.5rem;
+    max-height: calc(90vh - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+  }
+}

@@ -2,12 +2,17 @@
   "name": "MediCare+ Smart Healthcare",
   "short_name": "MediCare+",
   "description": "Your complete healthcare companion - Book appointments, track queues, access medical records, and get emergency assistance.",
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "display": "standalone",
-  "background_color": "#ffffff",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#f4f7f9",
   "theme_color": "#5995fd",
   "orientation": "portrait-primary",
   "scope": "/",
+  "id": "medicare-plus-pwa",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
