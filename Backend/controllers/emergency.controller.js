@@ -2,6 +2,10 @@ import Emergency from '../models/emergency.model.js';
 import Hospital from '../models/hospital.model.js';
 import Notification from '../models/notification.model.js';
 import User from '../models/user.model.js';
+import { 
+    sendEmergencyAlertSentNotification, 
+    sendHelpOnTheWayNotification 
+} from '../services/pushNotification.service.js';
 
 export const createEmergencyAlert = async (req, res) => {
   const { lat, lng, emergencyType, incidentType } = req.body;
@@ -55,6 +59,12 @@ export const createEmergencyAlert = async (req, res) => {
       const io = req.app.get('socketio');
       const hospitalRoom = `hospital_emergency_${nearestHospital._id}`;
       io.to(hospitalRoom).emit('new-emergency', populatedNotification);
+
+      // Send push notification to patient confirming SOS was sent
+      sendEmergencyAlertSentNotification(userId, nearestHospital.name);
+    } else {
+      // No hospital found but still confirm alert was sent
+      sendEmergencyAlertSentNotification(userId, null);
     }
 
     res.status(201).json({ 
@@ -69,7 +79,7 @@ export const createEmergencyAlert = async (req, res) => {
 // ... (manageEmergency function remains the same)
 export const manageEmergency = async (req, res) => {
   const { emergencyId } = req.params;
-  const { action } = req.body;
+  const { action, estimatedTime } = req.body;
   const helpdeskId = req.user.id;
 
   try {
@@ -77,6 +87,10 @@ export const manageEmergency = async (req, res) => {
     if (!emergency) {
       return res.status(404).json({ message: 'Emergency alert not found.' });
     }
+
+    // Get helpdesk user info to find hospital name
+    const helpdeskUser = await User.findById(helpdeskId).populate('hospitalId', 'name');
+    const hospitalName = helpdeskUser?.hospitalId?.name || 'Hospital';
 
     // --- THIS IS THE FIX ---
     // 1. Automatically update the status to 'acknowledged'.
@@ -93,6 +107,9 @@ export const manageEmergency = async (req, res) => {
     const io = req.app.get('socketio');
     const patientRoom = `user_${emergency.userId}`;
     io.to(patientRoom).emit('emergency-updated', emergency);
+
+    // Send "Help On The Way" push notification to patient
+    sendHelpOnTheWayNotification(emergency.userId.toString(), hospitalName, estimatedTime);
 
     res.json({ message: 'Emergency status updated.', emergency });
 

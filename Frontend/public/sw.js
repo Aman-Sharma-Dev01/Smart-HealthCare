@@ -136,6 +136,36 @@ self.addEventListener('push', (event) => {
       tag: 'queue-update',
       vibrate: [50, 25, 50]
     },
+    'new-record': {
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      tag: 'new-record',
+      requireInteraction: true,
+      vibrate: [100, 50, 100],
+      actions: [
+        { action: 'view-records', title: 'View Records' }
+      ]
+    },
+    'emergency-sent': {
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      tag: 'emergency-sent',
+      requireInteraction: true,
+      vibrate: [300, 100, 300, 100, 300],
+      actions: [
+        { action: 'open', title: 'View Status' }
+      ]
+    },
+    'help-coming': {
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      tag: 'help-coming',
+      requireInteraction: true,
+      vibrate: [200, 100, 200],
+      actions: [
+        { action: 'open', title: 'View Details' }
+      ]
+    },
     'default': {
       icon: '/icons/icon-192x192.png',
       badge: '/icons/icon-72x72.png',
@@ -178,6 +208,8 @@ self.addEventListener('notificationclick', (event) => {
     url = '/pwa?action=feedback&appointmentId=' + (data.appointmentId || '');
   } else if (event.action === 'reschedule') {
     url = '/pwa?action=reschedule';
+  } else if (event.action === 'view-records') {
+    url = '/pwa?tab=records';
   } else if (event.action === 'open') {
     url = '/pwa';
   }

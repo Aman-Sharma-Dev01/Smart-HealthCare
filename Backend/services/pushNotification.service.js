@@ -146,6 +146,46 @@ export const sendAppointmentReminderNotification = async (userId, doctorName, ho
     });
 };
 
+/**
+ * Send "New Medical Record" notification
+ */
+export const sendNewRecordNotification = async (userId, doctorName, recordType) => {
+    return sendPushNotification(userId, {
+        type: 'new-record',
+        title: '📋 New Medical Record',
+        body: `Dr. ${doctorName} has uploaded a new ${recordType || 'document'} to your health records.`,
+        url: '/pwa?tab=records'
+    });
+};
+
+/**
+ * Send "Emergency Alert Sent" notification (confirmation to patient)
+ */
+export const sendEmergencyAlertSentNotification = async (userId, hospitalName) => {
+    return sendPushNotification(userId, {
+        type: 'emergency-sent',
+        title: '🚨 Emergency Alert Sent!',
+        body: hospitalName 
+            ? `Your SOS alert has been sent to ${hospitalName}. Help is being arranged.`
+            : 'Your SOS alert has been sent to nearby hospitals. Stay calm, help is coming.',
+        url: '/pwa'
+    });
+};
+
+/**
+ * Send "Help On The Way" notification
+ */
+export const sendHelpOnTheWayNotification = async (userId, hospitalName, estimatedTime) => {
+    return sendPushNotification(userId, {
+        type: 'help-coming',
+        title: '🚑 Help is On The Way!',
+        body: estimatedTime 
+            ? `${hospitalName} has acknowledged your emergency. ETA: ${estimatedTime} minutes.`
+            : `${hospitalName} has acknowledged your emergency. Help is on the way!`,
+        url: '/pwa'
+    });
+};
+
 export default {
     sendPushNotification,
     sendYourTurnNotification,
@@ -153,5 +193,8 @@ export default {
     sendAppointmentMissedNotification,
     sendAppointmentCancelledNotification,
     sendQueueUpdateNotification,
-    sendAppointmentReminderNotification
+    sendAppointmentReminderNotification,
+    sendNewRecordNotification,
+    sendEmergencyAlertSentNotification,
+    sendHelpOnTheWayNotification
 };

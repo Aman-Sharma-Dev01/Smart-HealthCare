@@ -499,7 +499,7 @@ function DoctorDashboard() {
     return (
         <div className="app-layout">
             <Header 
-                doctorName={user?.name.split(' ').slice(1).join(' ')} 
+                doctorName={user?.name || 'Doctor'} 
                 isOnline={isOnline}
                 onToggleOnline={handleToggleOnline}
             />
