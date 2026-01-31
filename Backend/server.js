@@ -15,6 +15,7 @@ import emergencyRoutes from './routes/emergency.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import doctorRoutes from './routes/doctor.routes.js';
 import chatRoutes from './routes/chat.routes.js';
+import pushRoutes from './routes/push.routes.js';
 
 // --- 1. Initialize Express App ---
 const app = express();
@@ -70,6 +71,7 @@ app.use('/api/emergency', emergencyRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/doctors', doctorRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/push', pushRoutes);
 
 // --- 5. HTTP Server & Socket.IO Setup ---
 const server = http.createServer(app);

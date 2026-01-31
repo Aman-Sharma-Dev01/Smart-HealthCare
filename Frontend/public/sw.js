@@ -87,18 +87,78 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// Handle push notifications (for future use)
+// Handle push notifications
 self.addEventListener('push', (event) => {
   const data = event.data?.json() ?? {};
   const title = data.title || 'Medicare+ Notification';
+  
+  // Notification type-based styling
+  const notificationTypes = {
+    'your-turn': {
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      tag: 'your-turn',
+      requireInteraction: true,
+      vibrate: [200, 100, 200, 100, 200],
+      actions: [
+        { action: 'open', title: 'View Queue' }
+      ]
+    },
+    'appointment-completed': {
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      tag: 'appointment-completed',
+      requireInteraction: true,
+      vibrate: [100, 50, 100],
+      actions: [
+        { action: 'feedback', title: 'Give Feedback' },
+        { action: 'dismiss', title: 'Dismiss' }
+      ]
+    },
+    'appointment-missed': {
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      tag: 'appointment-missed',
+      vibrate: [100, 50, 100],
+      actions: [
+        { action: 'reschedule', title: 'Reschedule' }
+      ]
+    },
+    'appointment-cancelled': {
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      tag: 'appointment-cancelled',
+      vibrate: [100, 50, 100]
+    },
+    'queue-update': {
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      tag: 'queue-update',
+      vibrate: [50, 25, 50]
+    },
+    'default': {
+      icon: '/icons/icon-192x192.png',
+      badge: '/icons/icon-72x72.png',
+      vibrate: [100, 50, 100]
+    }
+  };
+
+  const typeConfig = notificationTypes[data.type] || notificationTypes['default'];
+  
   const options = {
     body: data.body || 'You have a new notification',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
-    vibrate: [100, 50, 100],
+    icon: typeConfig.icon,
+    badge: typeConfig.badge,
+    vibrate: typeConfig.vibrate,
+    tag: typeConfig.tag || 'medicare-notification',
+    requireInteraction: typeConfig.requireInteraction || false,
+    actions: typeConfig.actions || [],
     data: {
-      url: data.url || '/'
-    }
+      url: data.url || '/',
+      type: data.type,
+      appointmentId: data.appointmentId
+    },
+    silent: false
   };
 
   event.waitUntil(
@@ -110,7 +170,30 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
   
+  const data = event.notification.data;
+  let url = data.url || '/';
+  
+  // Handle action clicks
+  if (event.action === 'feedback') {
+    url = '/pwa?action=feedback&appointmentId=' + (data.appointmentId || '');
+  } else if (event.action === 'reschedule') {
+    url = '/pwa?action=reschedule';
+  } else if (event.action === 'open') {
+    url = '/pwa';
+  }
+  
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/')
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+      // Try to focus an existing window
+      for (const client of clientList) {
+        if (client.url.includes('/pwa') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // Open a new window if none exists
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
   );
 });

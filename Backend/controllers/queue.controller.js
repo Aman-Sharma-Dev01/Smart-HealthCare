@@ -1,5 +1,11 @@
 import Queue from '../models/queue.model.js';
 import Appointment from '../models/appointment.model.js';
+import { 
+    sendYourTurnNotification, 
+    sendAppointmentCompletedNotification, 
+    sendAppointmentMissedNotification,
+    sendQueueUpdateNotification 
+} from '../services/pushNotification.service.js';
 
 /**
  * @desc    Get queue status for a specific doctor, including the user's appointment info.
@@ -58,7 +64,9 @@ export const advanceQueue = async (req, res) => {
   const { markPreviousAs } = req.body; // 'Completed' or 'Missed'
   
   try {
-    const queue = await Queue.findById(queueId).populate('appointments');
+    const queue = await Queue.findById(queueId)
+      .populate('appointments')
+      .populate('doctorId', 'name');
     if (!queue) {
       return res.status(404).json({ message: 'Queue not found.' });
     }
@@ -73,7 +81,7 @@ export const advanceQueue = async (req, res) => {
       const currentAppointment = await Appointment.findOne({
         _id: { $in: queue.appointments },
         appointmentNumber: queue.currentNumber
-      });
+      }).populate('hospitalId', 'name');
 
       if (currentAppointment && currentAppointment.status === 'Scheduled') {
         currentAppointment.status = markPreviousAs || 'Completed';
@@ -102,6 +110,41 @@ export const advanceQueue = async (req, res) => {
     io.to(roomId).emit('queue-update', {
       currentNumber: queue.currentNumber,
     });
+
+    // Send push notifications
+    const doctorName = queue.doctorId?.name || 'Doctor';
+    
+    // Find the patient whose turn it is now and send "Your Turn" notification
+    const currentPatientAppointment = await Appointment.findOne({
+      _id: { $in: queue.appointments },
+      appointmentNumber: queue.currentNumber,
+      status: 'Scheduled'
+    }).populate('hospitalId', 'name');
+
+    if (currentPatientAppointment) {
+      const hospitalName = currentPatientAppointment.hospitalId?.name || 'Hospital';
+      sendYourTurnNotification(
+        currentPatientAppointment.patientId.toString(),
+        doctorName,
+        hospitalName
+      );
+    }
+
+    // Send "Almost Your Turn" notification to patients who are 2-3 positions away
+    const upcomingAppointments = queue.appointments.filter(
+      a => a.status === 'Scheduled' && 
+           a.appointmentNumber > queue.currentNumber && 
+           a.appointmentNumber <= queue.currentNumber + 3
+    );
+
+    for (const apt of upcomingAppointments) {
+      sendQueueUpdateNotification(
+        apt.patientId.toString(),
+        queue.currentNumber,
+        apt.appointmentNumber,
+        doctorName
+      );
+    }
     
     res.json({
       message: 'Queue advanced successfully',
@@ -128,12 +171,13 @@ export const markAppointmentInQueue = async (req, res) => {
     }
 
     try {
-        const appointment = await Appointment.findById(appointmentId);
+        const appointment = await Appointment.findById(appointmentId)
+            .populate('doctorId', 'name');
         if (!appointment) {
             return res.status(404).json({ message: 'Appointment not found.' });
         }
 
-        if (appointment.doctorId.toString() !== doctorId) {
+        if (appointment.doctorId._id.toString() !== doctorId) {
             return res.status(403).json({ message: 'Not authorized.' });
         }
 
@@ -153,6 +197,16 @@ export const markAppointmentInQueue = async (req, res) => {
         }
         // Also emit globally for patients listening
         io.emit('appointment-status-change', { appointmentId, status });
+
+        // Send push notifications based on status
+        const doctorName = appointment.doctorId?.name || 'Doctor';
+        const patientId = appointment.patientId.toString();
+
+        if (status === 'Completed') {
+            sendAppointmentCompletedNotification(patientId, doctorName, appointmentId);
+        } else if (status === 'Missed') {
+            sendAppointmentMissedNotification(patientId, doctorName);
+        }
 
         res.json({ message: `Appointment marked as ${status}`, appointment });
     } catch (error) {

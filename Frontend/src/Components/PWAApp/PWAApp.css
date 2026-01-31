@@ -9,6 +9,101 @@
     overflow-x: hidden;
 }
 
+/* Notification Banner */
+.notification-banner {
+    background: linear-gradient(135deg, #4a7dfc 0%, #6366f1 100%);
+    color: white;
+    padding: 14px 16px;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    box-shadow: 0 4px 12px rgba(74, 125, 252, 0.3);
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.notification-banner-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+}
+
+.notification-banner-icon {
+    font-size: 1.5rem;
+}
+
+.notification-banner-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.notification-banner-text strong {
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.notification-banner-text p {
+    font-size: 0.8rem;
+    opacity: 0.9;
+    margin: 0;
+}
+
+.notification-banner-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notification-banner .enable-btn {
+    background: white;
+    color: #4a7dfc;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.notification-banner .enable-btn:hover {
+    transform: scale(1.05);
+}
+
+.notification-banner .dismiss-btn {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.notification-banner .dismiss-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
 /* Header Styles - White background like reference */
 .pwa-header {
     display: flex;

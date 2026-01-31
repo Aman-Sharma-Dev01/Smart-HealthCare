@@ -6,6 +6,12 @@ import { BACKEND_API_URL } from '../../util';
 import { useSocket } from '../../context/SocketContext';
 import { useToast } from '../../context/ToastContext';
 import EmergencyWidget from '../EmergencyWidget/EmergencyWidget';
+import { 
+    isPushSupported, 
+    getNotificationPermission, 
+    subscribeToPush,
+    isSubscribed as checkIsSubscribed 
+} from '../../services/pushNotification';
 
 const API_KEY = import.meta.env.VITE_MAP_API;
 const LIBRARIES = ['places'];
@@ -38,6 +44,11 @@ const PWAApp = () => {
     const [actionLoading, setActionLoading] = useState(false);
     const [isRefreshing, setIsRefreshing] = useState(false);
     
+    // Push notification state
+    const [notificationPermission, setNotificationPermission] = useState('default');
+    const [isNotificationSubscribed, setIsNotificationSubscribed] = useState(false);
+    const [showNotificationBanner, setShowNotificationBanner] = useState(false);
+    
     const token = localStorage.getItem('token');
 
     const { isLoaded } = useJsApiLoader({
@@ -53,6 +64,56 @@ const PWAApp = () => {
             setUser(loggedInUser);
         }
     }, []);
+
+    // Check and setup push notifications
+    useEffect(() => {
+        const setupNotifications = async () => {
+            if (!isPushSupported()) return;
+            
+            const permission = getNotificationPermission();
+            setNotificationPermission(permission);
+            
+            const subscribed = await checkIsSubscribed();
+            setIsNotificationSubscribed(subscribed);
+            
+            // Show banner if not subscribed and permission not denied
+            if (!subscribed && permission !== 'denied' && token) {
+                // Check if user dismissed the banner before
+                const dismissed = localStorage.getItem('notificationBannerDismissed');
+                if (!dismissed) {
+                    setShowNotificationBanner(true);
+                }
+            }
+        };
+        
+        setupNotifications();
+    }, [token]);
+
+    // Handle notification subscription
+    const handleEnableNotifications = async () => {
+        if (!token) {
+            toast.error('Please login to enable notifications');
+            return;
+        }
+        
+        const result = await subscribeToPush(token);
+        
+        if (result.success) {
+            setIsNotificationSubscribed(true);
+            setShowNotificationBanner(false);
+            toast.success('🔔 Notifications enabled! You\'ll receive alerts for your appointments.');
+        } else if (result.reason === 'permission_denied') {
+            toast.error('Notification permission denied. Please enable in browser settings.');
+            setNotificationPermission('denied');
+        } else {
+            toast.error('Failed to enable notifications. Please try again.');
+        }
+    };
+
+    const dismissNotificationBanner = () => {
+        setShowNotificationBanner(false);
+        localStorage.setItem('notificationBannerDismissed', 'true');
+    };
 
     // Fetch latest appointment
     const fetchLatestAppointment = useCallback(async () => {
@@ -476,6 +537,27 @@ const PWAApp = () => {
 
         return (
         <div className="pwa-home-content">
+            {/* Notification Banner */}
+            {showNotificationBanner && (
+                <div className="notification-banner">
+                    <div className="notification-banner-content">
+                        <span className="notification-banner-icon">🔔</span>
+                        <div className="notification-banner-text">
+                            <strong>Enable Notifications</strong>
+                            <p>Get alerts when it's your turn and appointment updates</p>
+                        </div>
+                    </div>
+                    <div className="notification-banner-actions">
+                        <button className="enable-btn" onClick={handleEnableNotifications}>
+                            Enable
+                        </button>
+                        <button className="dismiss-btn" onClick={dismissNotificationBanner}>
+                            ✕
+                        </button>
+                    </div>
+                </div>
+            )}
+            
             {/* Appointments Section */}
             <section className="pwa-section appointments-section">
                 <div className="section-header-row">
