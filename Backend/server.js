@@ -49,6 +49,18 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static('uploads'));
 
 // --- 4. API Routes ---
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+    res.status(200).json({
+        status: 'ok',
+        message: 'Server is running',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        environment: process.env.NODE_ENV || 'development'
+    });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/hospitals', hospitalRoutes);
 app.use('/api/appointments', appointmentRoutes);
