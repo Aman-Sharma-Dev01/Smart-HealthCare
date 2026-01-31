@@ -94,9 +94,26 @@ io.on('connection', (socket) => {
       console.log(`Socket ${socket.id} joined private room: ${userRoom}`);
   });
 
+  // Listener for doctor-specific rooms (for personal notifications)
+  socket.on('join-doctor-room', (doctorId) => {
+      const doctorRoom = `doctor_${doctorId}`;
+      socket.join(doctorRoom);
+      console.log(`Socket ${socket.id} joined doctor room: ${doctorRoom}`);
+  });
+
+  // Handle heartbeat for connection health check
+  socket.on('heartbeat', () => {
+      socket.emit('heartbeat-ack');
+  });
+
   // Listener for when a user disconnects
-  socket.on('disconnect', () => {
-    console.log(`User disconnected: ${socket.id}`);
+  socket.on('disconnect', (reason) => {
+    console.log(`User disconnected: ${socket.id} - Reason: ${reason}`);
+  });
+
+  // Error handling
+  socket.on('error', (error) => {
+    console.error(`Socket error for ${socket.id}:`, error);
   });
 });
 

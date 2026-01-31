@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { io } from "socket.io-client";
 import './LiveQueueWidget.css';
-import { BACKEND_API_URL, SocketIO_URL } from '../../util';
+import { BACKEND_API_URL } from '../../util';
+import { useSocket } from '../../context/SocketContext';
 
 const LiveQueueWidget = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -11,6 +11,7 @@ const LiveQueueWidget = () => {
     const [isQueueFinished, setIsQueueFinished] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
+    const { subscribe, joinQueueRoom, isConnected } = useSocket();
     const token = localStorage.getItem('token');
     const API_BASE_URL = BACKEND_API_URL;
 
@@ -21,6 +22,7 @@ const LiveQueueWidget = () => {
     const fetchLatestAppointment = useCallback(async () => {
         if (!token) {
             setIsLoading(false);
+            setAppointment(null);
             return;
         }
         setIsLoading(true);
@@ -30,8 +32,18 @@ const LiveQueueWidget = () => {
             });
             if (res.ok) {
                 const data = await res.json();
-                setAppointment(data);
-                setIsQueueFinished(false); // Reset finished state for new appointment
+                // Handle null or empty response
+                if (data && data._id) {
+                    setAppointment(data);
+                    // Check if appointment is already completed/missed/cancelled
+                    if (['Completed', 'Missed', 'Cancelled'].includes(data.status)) {
+                        setIsQueueFinished(true);
+                    } else {
+                        setIsQueueFinished(false);
+                    }
+                } else {
+                    setAppointment(null);
+                }
             } else {
                 setAppointment(null);
             }
@@ -61,9 +73,15 @@ const LiveQueueWidget = () => {
             fetchLatestAppointment();
         };
 
+        const handleAppointmentUpdated = () => {
+            fetchLatestAppointment();
+        };
+
         window.addEventListener('appointmentBooked', handleAppointmentBooked);
+        window.addEventListener('appointmentUpdated', handleAppointmentUpdated);
         return () => {
             window.removeEventListener('appointmentBooked', handleAppointmentBooked);
+            window.removeEventListener('appointmentUpdated', handleAppointmentUpdated);
         };
     }, [fetchLatestAppointment]);
 
@@ -98,37 +116,54 @@ const LiveQueueWidget = () => {
         }
     }, [appointment, token]);
 
-    // Effect 3: Connect to Socket.IO for real-time updates
+    // Effect 3: Connect to Socket.IO for real-time updates using context
     useEffect(() => {
-        if (!queueStatus || !queueStatus.queueId) {
+        if (!queueStatus || !queueStatus.queueId || !isConnected) {
             return;
         }
 
-        const socket = io(SocketIO_URL);
-        socket.emit('join-queue-room', queueStatus.queueId);
+        // Join the queue room
+        joinQueueRoom(queueStatus.queueId);
 
-        socket.on('queue-update', (data) => {
+        // Subscribe to queue updates
+        const unsubscribeQueueUpdate = subscribe('queue-update', (data) => {
+            console.log('Queue update received:', data);
             setQueueStatus(prev => ({ ...prev, currentNumber: data.currentNumber }));
         });
 
+        // Subscribe to appointment status changes
+        const unsubscribeStatusChange = subscribe('appointment-status-change', ({ appointmentId, status }) => {
+            console.log('Appointment status changed in queue widget:', appointmentId, status);
+            if (appointment && appointment._id === appointmentId) {
+                if (['Completed', 'Missed', 'Cancelled'].includes(status)) {
+                    setIsQueueFinished(true);
+                    // Refetch to get next appointment
+                    fetchLatestAppointment();
+                }
+            }
+        });
+
         return () => {
-            socket.disconnect();
+            unsubscribeQueueUpdate();
+            unsubscribeStatusChange();
         };
-    }, [queueStatus?.queueId]);
+    }, [queueStatus?.queueId, isConnected, joinQueueRoom, subscribe, appointment, fetchLatestAppointment]);
 
     // Effect 4: Handle the widget's state and sound based on the queue number
     useEffect(() => {
         if (appointment && queueStatus) {
+            // Don't play sound or auto-open if appointment is already finished
+            const isFinished = isQueueFinished || ['Completed', 'Missed', 'Cancelled'].includes(appointment.status);
+            
             if (queueStatus.currentNumber > appointment.appointmentNumber) {
                 setIsQueueFinished(true);
-                setIsOpen(true);
             } 
-            else if (appointment.appointmentNumber === queueStatus.currentNumber) {
+            else if (appointment.appointmentNumber === queueStatus.currentNumber && !isFinished) {
                 setIsOpen(true);
                 appointmentAudioRef.current.play().catch(e => console.error("Audio play failed:", e));
             }
         }
-    }, [queueStatus, appointment]);
+    }, [queueStatus, appointment, isQueueFinished]);
 
     // Don't show widget if user is not a patient
     if (!user) {
@@ -136,14 +171,38 @@ const LiveQueueWidget = () => {
     }
 
     const isMyTurn = appointment && queueStatus && appointment.appointmentNumber === queueStatus.currentNumber;
-    const hasAppointment = appointment && queueStatus;
+    const hasAppointment = appointment && appointment._id && queueStatus;
 
     return (
         <div className={`live-queue-widget ${isOpen ? 'open' : ''} ${isMyTurn ? 'my-turn' : ''}`}>
             <button className="widget-toggle-btn" onClick={() => setIsOpen(!isOpen)}>
-                <i className={`fas ${isOpen ? 'fa-times' : (isMyTurn ? 'fa-bell' : 'fa-users')}`}></i>
+                {isOpen ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                ) : isMyTurn ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                ) : (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                )}
             </button>
             <div className="widget-content">
+                {/* Close button inside widget content */}
+                <button className="widget-close-btn" onClick={() => setIsOpen(false)}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
                 {isLoading ? (
                     <div className="queue-loading-state">
                         <div className="mini-spinner"></div>
@@ -158,7 +217,10 @@ const LiveQueueWidget = () => {
                     </div>
                 ) : isQueueFinished ? (
                     <div className="queue-finished-message">
-                        <i className="fas fa-check-circle"></i>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#28a745" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
                         <h4>Appointment Complete</h4>
                         <p>Your turn has passed. There are no more active appointments for you at this time.</p>
                     </div>

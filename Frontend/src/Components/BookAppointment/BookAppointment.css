@@ -434,3 +434,118 @@ body {
         font-size: 0.8rem;
     }
 }
+
+/* ==========================================
+   DATE SELECTION STYLES
+   ========================================== */
+
+.date-selection {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.date-option {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.date-option input[type="radio"] {
+    display: none;
+}
+
+.date-option-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    min-width: 70px;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    background: #f8fafc;
+    transition: all 0.2s ease;
+}
+
+.date-option:hover .date-option-content {
+    border-color: var(--primary-color);
+    background: #eff6ff;
+}
+
+.date-option.selected .date-option-content {
+    border-color: var(--primary-color);
+    background: var(--primary-color);
+    color: white;
+}
+
+.date-day {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.date-num {
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+}
+
+.date-month {
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    opacity: 0.8;
+}
+
+.date-label {
+    font-size: 0.7rem;
+    font-weight: 500;
+    margin-top: 0.25rem;
+    padding: 0.15rem 0.5rem;
+    background: rgba(34, 197, 94, 0.2);
+    color: #16a34a;
+    border-radius: 10px;
+}
+
+.date-option.selected .date-label {
+    background: rgba(255, 255, 255, 0.3);
+    color: white;
+}
+
+.no-dates-warning {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 1rem;
+    background: #fef3c7;
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+}
+
+.no-dates-warning span {
+    font-size: 1.5rem;
+}
+
+.no-dates-warning p {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #92400e;
+}
+
+@media (max-width: 576px) {
+    .date-selection {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 0.5rem;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .date-option-content {
+        min-width: 65px;
+        padding: 0.5rem 0.75rem;
+    }
+    
+    .date-num {
+        font-size: 1.25rem;
+    }
+}

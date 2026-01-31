@@ -186,6 +186,57 @@
     margin-bottom: 20px;
 }
 
+.section-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.section-header-row .pwa-section-title {
+    margin-bottom: 0;
+}
+
+.refresh-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #e8f0fe 0%, #f0f4ff 100%);
+    color: #2563eb;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.refresh-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #dbeafe 0%, #e0e7ff 100%);
+}
+
+.refresh-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.refresh-btn.spinning svg {
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.refresh-btn:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
 .pwa-section-title {
     font-size: 1.4rem;
     font-weight: 700;
@@ -222,6 +273,7 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 6px;
+    flex-wrap: wrap;
 }
 
 .appointment-header .calendar-icon {
@@ -294,8 +346,9 @@
 
 /* Doctor Illustration - Clean, modern integrated design */
 .appointment-image {
-    width: 115px;
-    height: 140px;
+    width: 135px;
+    height: 170px;
+    border-radius: 12px;
     flex-shrink: 0;
     position: absolute;
     right: 10px;
@@ -728,6 +781,48 @@
     margin-top: 4px !important;
 }
 
+.history-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    align-items: center;
+}
+
+.history-details-btn {
+    background: #f0f4f8;
+    border: none;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: #4a7dfc;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.history-details-btn:hover {
+    background: #e1e8f0;
+}
+
+.history-feedback-btn {
+    background: linear-gradient(135deg, #ff9800 0%, #ffc107 100%);
+    border: none;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    color: white;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.history-feedback-btn:hover {
+    opacity: 0.9;
+}
+
+.history-rated {
+    font-size: 0.75rem;
+    color: #ff9800;
+}
+
 .history-status {
     padding: 6px 12px;
     border-radius: 20px;
@@ -916,4 +1011,484 @@ button, a {
     width: 90vw !important;
     max-width: 350px !important;
     z-index: 1001 !important;
+}
+
+/* Back Button */
+.pwa-back-btn {
+    background: none;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.pwa-back-btn:hover,
+.pwa-back-btn:active {
+    background-color: rgba(74, 125, 252, 0.1);
+}
+
+/* Queue Number Badge */
+.queue-info {
+    margin: 8px 0;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.queue-number-badge {
+    display: inline-block;
+    background: linear-gradient(135deg, #4a7dfc 0%, #5995fd 100%);
+    color: white;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.reason-badge {
+    display: inline-block;
+    background: #f0f4f8;
+    color: #666;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+}
+
+/* Appointment Status Badge */
+.appointment-status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-left: auto;
+}
+
+.status-scheduled {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.status-completed {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.status-cancelled {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.status-missed {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.status-rescheduled {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+/* Feedback button style */
+.btn-feedback {
+    background: linear-gradient(135deg, #ff9800 0%, #ffc107 100%);
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-feedback:hover,
+.btn-feedback:active {
+    transform: scale(1.02);
+    box-shadow: 0 4px 12px rgba(255, 152, 0, 0.3);
+}
+
+/* Modal Styles */
+.pwa-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.pwa-modal {
+    background: white;
+    border-radius: 16px;
+    width: 100%;
+    max-width: 400px;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { 
+        opacity: 0;
+        transform: translateY(20px); 
+    }
+    to { 
+        opacity: 1;
+        transform: translateY(0); 
+    }
+}
+
+.pwa-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #eee;
+    background: linear-gradient(135deg, #4a7dfc 0%, #5995fd 100%);
+    color: white;
+}
+
+.pwa-modal-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.pwa-modal-header button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.pwa-modal-content {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.pwa-modal-actions {
+    padding: 16px 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pwa-modal-actions button {
+    flex: 1;
+    min-width: 100px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel-appt {
+    background: #dc3545;
+    color: white;
+    border: none;
+}
+
+.btn-cancel-appt:hover {
+    background: #c82333;
+}
+
+.btn-give-feedback {
+    background: #28a745;
+    color: white;
+    border: none;
+}
+
+.btn-give-feedback:hover {
+    background: #218838;
+}
+
+.btn-close-modal {
+    background: #f8f9fa;
+    color: #333;
+    border: 1px solid #ddd;
+}
+
+.btn-close-modal:hover {
+    background: #e9ecef;
+}
+
+.btn-confirm-reschedule {
+    background: #4a7dfc;
+    color: white;
+    border: none;
+}
+
+.btn-confirm-reschedule:hover {
+    background: #3a6de8;
+}
+
+.btn-confirm-reschedule:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-submit-feedback {
+    background: #4a7dfc;
+    color: white;
+    border: none;
+}
+
+.btn-submit-feedback:hover {
+    background: #3a6de8;
+}
+
+.btn-submit-feedback:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Detail Sections */
+.detail-section {
+    margin-bottom: 20px;
+}
+
+.detail-section h4 {
+    font-size: 0.9rem;
+    color: #666;
+    margin: 0 0 10px 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-label {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+.detail-value {
+    font-weight: 500;
+    color: #333;
+}
+
+.status-badge {
+    padding: 4px 12px;
+    border-radius: 12px;
+    color: white;
+    font-size: 0.8rem;
+}
+
+/* Doctor Detail Card */
+.doctor-detail-card {
+    display: flex;
+    gap: 12px;
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.doctor-detail-card img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.doctor-detail-card h5 {
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+.doctor-detail-card p {
+    margin: 4px 0 0 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.doctor-rating {
+    font-size: 0.8rem;
+    color: #f39c12;
+}
+
+.hospital-detail {
+    font-size: 0.95rem;
+    color: #333;
+    margin: 0;
+}
+
+/* Feedback Display */
+.feedback-display {
+    background: #f8f9fa;
+    padding: 12px;
+    border-radius: 10px;
+}
+
+.feedback-display .stars {
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+}
+
+.feedback-display p {
+    margin: 0;
+    color: #666;
+    font-style: italic;
+}
+
+/* Available Dates List */
+.modal-description {
+    color: #666;
+    margin-bottom: 16px;
+    font-size: 0.9rem;
+}
+
+.available-dates-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.date-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 16px;
+    background: #f8f9fa;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.date-option:hover {
+    background: #e9ecef;
+}
+
+.date-option.selected {
+    border-color: #4a7dfc;
+    background: #f0f5ff;
+}
+
+.date-text {
+    font-weight: 500;
+    color: #333;
+}
+
+.slots-text {
+    font-size: 0.8rem;
+    color: #28a745;
+}
+
+.no-dates-message {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+}
+
+.no-dates-message p {
+    margin: 8px 0;
+}
+
+/* Star Rating */
+.star-rating {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin: 20px 0;
+}
+
+.star-btn {
+    background: none;
+    border: none;
+    font-size: 2.5rem;
+    color: #ddd;
+    cursor: pointer;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.star-btn:hover {
+    transform: scale(1.1);
+}
+
+.star-btn.active {
+    color: #f39c12;
+}
+
+.rating-label {
+    text-align: center;
+    color: #666;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    min-height: 1.2em;
+}
+
+.feedback-textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-family: inherit;
+    font-size: 0.9rem;
+    resize: vertical;
+}
+
+.feedback-textarea:focus {
+    outline: none;
+    border-color: #4a7dfc;
+}
+
+/* Rate Now Button in History */
+.btn-rate-now {
+    background: #f39c12;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    margin-top: 8px;
+}
+
+.btn-rate-now:hover {
+    background: #e67e22;
+}
+
+/* History Card Clickable */
+.history-card {
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.history-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }

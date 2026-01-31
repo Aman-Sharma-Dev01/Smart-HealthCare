@@ -11,9 +11,28 @@ const appointmentSchema = new mongoose.Schema({
   patientPhone: { type: String, required: true },
   status: {
     type: String,
-    enum: ['Scheduled', 'Completed', 'Cancelled'],
+    enum: ['Scheduled', 'Completed', 'Cancelled', 'Missed', 'Rescheduled'],
     default: 'Scheduled',
   },
+  // Appointment date (for scheduling on specific dates)
+  appointmentDate: {
+    type: String, // YYYY-MM-DD format
+    default: function() {
+      return new Date().toISOString().slice(0, 10);
+    }
+  },
+  // For rescheduling
+  rescheduledFrom: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
+  rescheduledTo: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
+  // Patient feedback
+  feedback: {
+    rating: { type: Number, min: 1, max: 5 },
+    comment: { type: String },
+    createdAt: { type: Date }
+  },
+  // Completion notes by doctor
+  doctorNotes: { type: String },
+  completedAt: { type: Date }
 }, { timestamps: true });
 
 const Appointment = mongoose.model('Appointment', appointmentSchema);

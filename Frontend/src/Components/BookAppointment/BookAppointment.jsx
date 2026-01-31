@@ -18,6 +18,9 @@ const BookAppointment = () => {
     const [doctors, setDoctors] = useState([]);
     const [selectedHospital, setSelectedHospital] = useState('');
     const [selectedDoctor, setSelectedDoctor] = useState('');
+    const [selectedDate, setSelectedDate] = useState('today');
+    const [availableDates, setAvailableDates] = useState([]);
+    const [doctorAvailability, setDoctorAvailability] = useState({ isOnline: false, isAvailableToday: false });
     const [reason, setReason] = useState('');
     const [symptoms, setSymptoms] = useState('');
     
@@ -81,6 +84,10 @@ const BookAppointment = () => {
                     });
                     if (!response.ok) throw new Error('Could not fetch doctors for this hospital.');
                     setDoctors(await response.json());
+                    // Reset doctor selection when hospital changes
+                    setSelectedDoctor('');
+                    setAvailableDates([]);
+                    setSelectedDate('today');
                 } catch (err) {
                     showToast(err.message, 'error');
                 }
@@ -88,6 +95,38 @@ const BookAppointment = () => {
             fetchDoctors();
         }
     }, [selectedHospital, token]);
+
+    // Fetch available dates when a doctor is selected
+    useEffect(() => {
+        if (selectedDoctor) {
+            const fetchAvailability = async () => {
+                try {
+                    const response = await fetch(`${API_BASE_URL}/doctors/available-dates/${selectedDoctor}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const data = await response.json();
+                        setAvailableDates(data.availableDates || []);
+                        setDoctorAvailability({
+                            isOnline: data.isOnline || false,
+                            isAvailableToday: data.isAvailableToday || false
+                        });
+                        // Default to today if available, otherwise first available date
+                        if (data.isAvailableToday) {
+                            setSelectedDate('today');
+                        } else if (data.availableDates && data.availableDates.length > 0) {
+                            setSelectedDate(data.availableDates[0]);
+                        } else {
+                            setSelectedDate('');
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch doctor availability:', err);
+                }
+            };
+            fetchAvailability();
+        }
+    }, [selectedDoctor, token]);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });
@@ -97,6 +136,10 @@ const BookAppointment = () => {
         e.preventDefault();
         if (!selectedHospital || !selectedDoctor || !reason) {
             showToast('Please fill all required fields.', 'error');
+            return;
+        }
+        if (!selectedDate) {
+            showToast('Please select an appointment date.', 'error');
             return;
         }
         setIsBooking(true);
@@ -112,15 +155,28 @@ const BookAppointment = () => {
         };
 
         try {
-            const response = await fetch(`${API_BASE_URL}/appointments/book`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(payload)
-            });
+            let response;
+            if (selectedDate === 'today') {
+                // Book for today (existing endpoint)
+                response = await fetch(`${API_BASE_URL}/appointments/book`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(payload)
+                });
+            } else {
+                // Book for a specific date (new endpoint)
+                response = await fetch(`${API_BASE_URL}/appointments/book-date`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify({ ...payload, appointmentDate: selectedDate })
+                });
+            }
+            
             const data = await response.json();
             if (!response.ok) throw new Error(data.message || 'Booking failed.');
 
-            showToast(`Appointment #${data.appointmentNumber} confirmed!`);
+            const dateText = selectedDate === 'today' ? 'today' : new Date(selectedDate).toLocaleDateString();
+            showToast(`Appointment #${data.appointmentNumber || 'N/A'} confirmed for ${dateText}!`);
             
             // Dispatch custom event to update LiveQueueWidget immediately
             window.dispatchEvent(new CustomEvent('appointmentBooked'));
@@ -200,9 +256,65 @@ const BookAppointment = () => {
                         <label htmlFor="doctor">Select Doctor</label>
                         <select id="doctor" value={selectedDoctor} onChange={(e) => setSelectedDoctor(e.target.value)} required disabled={!selectedHospital}>
                             <option value="" disabled>-- Choose a doctor --</option>
-                            {doctors.map(d => <option key={d._id} value={d._id}>{d.name} ({d.designation})</option>)}
+                            {doctors.map(d => (
+                                <option key={d._id} value={d._id}>
+                                    {d.name} ({d.designation}) {d.isOnline ? '🟢' : '🔴'}
+                                </option>
+                            ))}
                         </select>
                     </div>
+
+                    {selectedDoctor && (
+                        <div className="form-group">
+                            <label htmlFor="appointmentDate">Select Appointment Date</label>
+                            {!doctorAvailability.isAvailableToday && availableDates.length === 0 ? (
+                                <div className="no-dates-warning">
+                                    <span>⚠️</span>
+                                    <p>This doctor has no available dates set. Please choose another doctor or check back later.</p>
+                                </div>
+                            ) : (
+                                <div className="date-selection">
+                                    {doctorAvailability.isAvailableToday && (
+                                        <label className={`date-option ${selectedDate === 'today' ? 'selected' : ''}`}>
+                                            <input 
+                                                type="radio" 
+                                                name="appointmentDate" 
+                                                value="today"
+                                                checked={selectedDate === 'today'}
+                                                onChange={(e) => setSelectedDate(e.target.value)}
+                                            />
+                                            <div className="date-option-content">
+                                                <span className="date-day">Today</span>
+                                                <span className="date-label">Available Now</span>
+                                            </div>
+                                        </label>
+                                    )}
+                                    {availableDates.map((date, index) => {
+                                        const dateObj = new Date(date);
+                                        const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                                        const dayNum = dateObj.getDate();
+                                        const monthName = dateObj.toLocaleDateString('en-US', { month: 'short' });
+                                        return (
+                                            <label key={index} className={`date-option ${selectedDate === date ? 'selected' : ''}`}>
+                                                <input 
+                                                    type="radio" 
+                                                    name="appointmentDate" 
+                                                    value={date}
+                                                    checked={selectedDate === date}
+                                                    onChange={(e) => setSelectedDate(e.target.value)}
+                                                />
+                                                <div className="date-option-content">
+                                                    <span className="date-day">{dayName}</span>
+                                                    <span className="date-num">{dayNum}</span>
+                                                    <span className="date-month">{monthName}</span>
+                                                </div>
+                                            </label>
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="form-group">
                         <label htmlFor="reason">Reason for Visit</label>

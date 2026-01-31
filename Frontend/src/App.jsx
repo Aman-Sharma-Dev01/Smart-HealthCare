@@ -54,6 +54,7 @@ const App = () => {
   if (shouldShowPWAInterface) {
     return (
       <>
+        <LiveQueueWidget />
         <Routes>
           <Route path="/login-register" element={<Login />} />
           <Route path="/doctor-dashboard" element={<HospitalDashboard />} />

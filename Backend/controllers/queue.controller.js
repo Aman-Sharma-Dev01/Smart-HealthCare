@@ -55,9 +55,10 @@ export const getQueueStatus = async (req, res) => {
  */
 export const advanceQueue = async (req, res) => {
   const { queueId } = req.params;
+  const { markPreviousAs } = req.body; // 'Completed' or 'Missed'
   
   try {
-    const queue = await Queue.findById(queueId);
+    const queue = await Queue.findById(queueId).populate('appointments');
     if (!queue) {
       return res.status(404).json({ message: 'Queue not found.' });
     }
@@ -67,20 +68,33 @@ export const advanceQueue = async (req, res) => {
       return res.status(400).json({ message: 'End of queue reached. No more patients.' });
     }
     
-    // Optional: Mark the appointment just served as 'Completed'
+    // Mark the current appointment based on doctor's choice (only if it's still Scheduled)
     if (queue.currentNumber > 0) {
-      const appointmentToComplete = await Appointment.findOne({
+      const currentAppointment = await Appointment.findOne({
         _id: { $in: queue.appointments },
         appointmentNumber: queue.currentNumber
       });
 
-      if (appointmentToComplete) {
-        appointmentToComplete.status = 'Completed';
-        await appointmentToComplete.save();
+      if (currentAppointment && currentAppointment.status === 'Scheduled') {
+        currentAppointment.status = markPreviousAs || 'Completed';
+        if (markPreviousAs === 'Completed') {
+          currentAppointment.completedAt = new Date();
+        }
+        await currentAppointment.save();
       }
     }
     
-    queue.currentNumber += 1;
+    // Find the next valid appointment number (skip Cancelled, Completed, Missed)
+    let nextNumber = queue.currentNumber + 1;
+    while (nextNumber <= queue.lastAppointmentNumber) {
+      const nextAppointment = queue.appointments.find(a => a.appointmentNumber === nextNumber);
+      if (nextAppointment && nextAppointment.status === 'Scheduled') {
+        break; // Found a valid scheduled appointment
+      }
+      nextNumber++;
+    }
+    
+    queue.currentNumber = nextNumber;
     await queue.save();
 
     const io = req.app.get('socketio');
@@ -99,6 +113,53 @@ export const advanceQueue = async (req, res) => {
   }
 };
 
+/**
+ * @desc    Mark specific appointment status without advancing queue
+ * @route   PUT /api/queues/mark-appointment/:appointmentId
+ * @access  Protected (Doctor only)
+ */
+export const markAppointmentInQueue = async (req, res) => {
+    const { appointmentId } = req.params;
+    const { status, notes } = req.body;
+    const doctorId = req.user.id;
+
+    if (!['Completed', 'Missed'].includes(status)) {
+        return res.status(400).json({ message: 'Invalid status. Use Completed or Missed.' });
+    }
+
+    try {
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            return res.status(404).json({ message: 'Appointment not found.' });
+        }
+
+        if (appointment.doctorId.toString() !== doctorId) {
+            return res.status(403).json({ message: 'Not authorized.' });
+        }
+
+        appointment.status = status;
+        if (notes) appointment.doctorNotes = notes;
+        if (status === 'Completed') appointment.completedAt = new Date();
+        await appointment.save();
+
+        // Find the queue to get the room ID
+        const today = new Date().toISOString().slice(0, 10);
+        const queue = await Queue.findOne({ doctorId, date: today });
+
+        // Emit update to the specific queue room
+        const io = req.app.get('socketio');
+        if (queue) {
+            io.to(queue._id.toString()).emit('appointment-status-change', { appointmentId, status });
+        }
+        // Also emit globally for patients listening
+        io.emit('appointment-status-change', { appointmentId, status });
+
+        res.json({ message: `Appointment marked as ${status}`, appointment });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};
+
 // --- NEW FUNCTION ---
 export const getMyQueue = async (req, res) => {
     const doctorId = req.user.id;
@@ -108,10 +169,32 @@ export const getMyQueue = async (req, res) => {
         const queue = await Queue.findOne({ doctorId, date: today })
             .populate({
                 path: 'appointments',
-                select: 'patientName reasonForVisit appointmentNumber status' // Select fields you need
+                select: 'patientName reasonForVisit appointmentNumber status patientPhone symptoms' // Select fields you need
             });
 
         // If no appointments today, it's not an error, just return an empty state
+        if (!queue) {
+            return res.json(null);
+        }
+        
+        res.json(queue);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};
+
+// Get queue for a specific date
+export const getQueueByDate = async (req, res) => {
+    const doctorId = req.user.id;
+    const { date } = req.params;
+
+    try {
+        const queue = await Queue.findOne({ doctorId, date })
+            .populate({
+                path: 'appointments',
+                select: 'patientName reasonForVisit appointmentNumber status patientPhone symptoms'
+            });
+
         if (!queue) {
             return res.json(null);
         }

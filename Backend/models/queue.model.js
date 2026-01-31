@@ -8,6 +8,7 @@ const queueSchema = new mongoose.Schema(
     currentNumber: { type: Number, default: 0 },
     appointments: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }],
     lastAppointmentNumber: { type: Number, default: 0 },
+    isActive: { type: Boolean, default: true }, // Whether the queue is active for the day
   },
   { timestamps: true }
 );

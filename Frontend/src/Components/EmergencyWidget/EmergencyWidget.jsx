@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './EmergencyWidget.css';
-import { io } from "socket.io-client";
-import { BACKEND_API_URL, SocketIO_URL } from '../../util';
+import { BACKEND_API_URL } from '../../util';
+import { useSocket } from '../../context/SocketContext';
 
 // A simple Toast component for notifications
 const Toast = ({ message, type, onDismiss }) => {
@@ -25,6 +25,7 @@ const EmergencyWidget = () => {
     const [incidentType, setIncidentType] = useState('accident');
     const [image, setImage] = useState(null);
 
+    const { subscribe, joinUserRoom, isConnected } = useSocket();
     const token = localStorage.getItem('token');
     const API_BASE_URL = BACKEND_API_URL;
 
@@ -48,20 +49,21 @@ const EmergencyWidget = () => {
         };
     }, []);
 
-    // Effect for real-time updates on an active emergency
+    // Join user room and listen for real-time updates on active emergency
     useEffect(() => {
-        if (!user) return;
+        if (!user || !isConnected) return;
 
-        const socket = io(SocketIO_URL);
-        socket.emit('join-user-room', user._id);
+        // Join user room for personal notifications
+        joinUserRoom(user._id);
 
-        socket.on('emergency-updated', (updatedEmergency) => {
+        // Subscribe to emergency updates
+        const unsubscribe = subscribe('emergency-updated', (updatedEmergency) => {
             showToast("Helpdesk has responded to your alert!", "success");
             setActiveEmergency(updatedEmergency);
         });
 
-        return () => socket.disconnect();
-    }, [user]);
+        return unsubscribe;
+    }, [user, isConnected, joinUserRoom, subscribe]);
 
     const showToast = (message, type = 'success') => {
         setToast({ show: true, message, type });

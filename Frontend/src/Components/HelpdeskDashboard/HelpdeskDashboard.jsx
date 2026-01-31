@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './HelpdeskDashboard.css';
-import { io } from "socket.io-client";
-import { BACKEND_API_URL, SocketIO_URL } from '../../util';
+import { BACKEND_API_URL } from '../../util';
+import { useSocket } from '../../context/SocketContext';
 
 // A simple Toast component for notifications
 const Toast = ({ message, type, onDismiss }) => {
@@ -21,6 +21,7 @@ const HelpdeskDashboard = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState('');
     const [user, setUser] = useState(null);
+    const [hospitalId, setHospitalId] = useState(null);
     
 
     // Modal State
@@ -33,6 +34,7 @@ const HelpdeskDashboard = () => {
 
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
+    const { subscribe, joinHospitalEmergencyRoom, isConnected } = useSocket();
     const API_BASE_URL = BACKEND_API_URL;
     const token = localStorage.getItem('token');
     const emergencyAudioRef = useRef(new Audio('/emergency-alert.mp3'));
@@ -70,30 +72,44 @@ const HelpdeskDashboard = () => {
         fetchData();
     }, [token]);
 
+    // Get hospital ID for emergency room
     useEffect(() => {
-        if (!user || !user.hospitalName) return;
-        const socket = io(SocketIO_URL);
-        const getHospitalIdAndJoinRoom = async () => {
+        if (!user || !user.hospitalName || !token) return;
+        
+        const getHospitalId = async () => {
             try {
                 const res = await fetch(`${API_BASE_URL}/hospitals/by-name/${encodeURIComponent(user.hospitalName)}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                if (!res.ok) return;
-                const hospitalData = await res.json();
-                socket.emit('join-hospital-emergency-room', hospitalData._id);
+                if (res.ok) {
+                    const hospitalData = await res.json();
+                    setHospitalId(hospitalData._id);
+                }
             } catch (err) {
-                console.error("Could not join hospital room", err);
+                console.error("Could not get hospital ID", err);
             }
         };
-        getHospitalIdAndJoinRoom();
-        socket.on('new-emergency', (newNotification) => {
+        getHospitalId();
+    }, [user, token]);
+
+    // Join hospital emergency room and listen for new emergencies
+    useEffect(() => {
+        if (!hospitalId || !isConnected) return;
+
+        // Join the hospital emergency room
+        joinHospitalEmergencyRoom(hospitalId);
+
+        // Subscribe to new emergency alerts
+        const unsubscribe = subscribe('new-emergency', (newNotification) => {
+            console.log('New emergency received:', newNotification);
             setNotifications(prev => [newNotification, ...prev]);
             const audio = emergencyAudioRef.current;
             audio.play().catch(e => console.error("Audio play failed:", e));
             setTimeout(() => { audio.pause(); audio.currentTime = 0; }, 5000);
         });
-        return () => socket.disconnect();
-    }, [user, token]);
+
+        return unsubscribe;
+    }, [hospitalId, isConnected, joinHospitalEmergencyRoom, subscribe]);
 
     const filteredDoctors = useMemo(() =>
         doctors.filter(doc =>

@@ -2,19 +2,19 @@
 
 .live-queue-widget {
     position: fixed;
-    bottom: 100px;
-    right: 25px;
-    z-index: 1000;
+    bottom: 110px !important;
+    right: 12px !important;
+    z-index: 998;
 }
 
 .widget-toggle-btn {
-    width: 60px;
-    height: 60px;
+    width: 50px;
+    height: 50px;
     background-color: #007bff;
     color: white;
     border: none;
     border-radius: 50%;
-    font-size: 24px;
+    font-size: 22px;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -58,6 +58,32 @@
     transform: translateY(20px);
     pointer-events: none;
     transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Close button inside widget content */
+.widget-close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 32px;
+    height: 32px;
+    background: #f0f0f0;
+    border: none;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.widget-close-btn:hover {
+    background: #e0e0e0;
+    transform: scale(1.1);
+}
+
+.widget-close-btn svg {
+    color: #666;
 }
 
 .live-queue-widget.open .widget-content {
