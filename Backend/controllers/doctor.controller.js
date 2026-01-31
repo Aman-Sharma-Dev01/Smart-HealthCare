@@ -36,7 +36,7 @@ export const getDoctorsByHospital = async (req, res) => {
         const doctors = await User.find({
             role: 'doctor',
             hospitalName: hospitalName
-        }).select('name designation'); // Send only public info
+        }).select('name designation gender'); // Send only public info including gender
         res.json(doctors);
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });

@@ -36,6 +36,18 @@ const EmergencyWidget = () => {
         }
     }, []);
 
+    // Effect: Listen for open emergency widget event (from PWA SOS button)
+    useEffect(() => {
+        const handleOpenWidget = () => {
+            setIsOpen(true);
+        };
+
+        window.addEventListener('openEmergencyWidget', handleOpenWidget);
+        return () => {
+            window.removeEventListener('openEmergencyWidget', handleOpenWidget);
+        };
+    }, []);
+
     // Effect for real-time updates on an active emergency
     useEffect(() => {
         if (!user) return;

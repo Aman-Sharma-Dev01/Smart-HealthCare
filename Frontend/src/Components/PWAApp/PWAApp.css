@@ -1,0 +1,919 @@
+/* PWA App Styles - Mobile-First Design */
+
+.pwa-app {
+    min-height: 100vh;
+    background-color: #f0f4f8;
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+/* Header Styles - White background like reference */
+.pwa-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 20px;
+    background: #ffffff;
+    color: #1a1a2e;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.pwa-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1a1a2e;
+}
+
+.pwa-logo svg {
+    fill: none;
+    stroke: #4a7dfc;
+}
+
+.pwa-menu-btn {
+    background: none;
+    border: none;
+    color: #4a7dfc;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background-color 0.2s;
+}
+
+.pwa-menu-btn svg {
+    stroke: #4a7dfc;
+    stroke-width: 2.5;
+}
+
+.pwa-menu-btn:active {
+    background-color: rgba(74, 125, 252, 0.1);
+}
+
+/* Side Menu */
+.pwa-side-menu {
+    position: fixed;
+    top: 0;
+    right: -280px;
+    width: 280px;
+    height: 100vh;
+    background: white;
+    box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+    z-index: 1001;
+    transition: right 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.pwa-side-menu.open {
+    right: 0;
+}
+
+.pwa-menu-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #eee;
+    background: linear-gradient(135deg, #4a7dfc 0%, #5995fd 100%);
+    color: white;
+}
+
+.pwa-menu-header button {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 4px;
+}
+
+.pwa-menu-content {
+    padding: 20px;
+    flex: 1;
+}
+
+.pwa-user-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin-bottom: 20px;
+}
+
+.pwa-user-info img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+}
+
+.pwa-user-info h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: #333;
+}
+
+.pwa-user-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.pwa-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 16px;
+    border: none;
+    background: none;
+    font-size: 1rem;
+    color: #333;
+    cursor: pointer;
+    border-radius: 10px;
+    transition: background-color 0.2s;
+    text-align: left;
+}
+
+.pwa-menu-item:hover,
+.pwa-menu-item:active {
+    background-color: #f0f4ff;
+}
+
+.pwa-menu-item.logout {
+    color: #dc3545;
+    margin-top: 20px;
+    border-top: 1px solid #eee;
+    padding-top: 20px;
+}
+
+.pwa-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.pwa-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Main Content */
+.pwa-main {
+    flex: 1;
+    padding: 16px;
+    padding-bottom: 100px;
+    overflow-y: auto;
+    background: #f0f4f8;
+}
+
+/* Section Styles */
+.pwa-section {
+    margin-bottom: 20px;
+}
+
+.pwa-section-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin-bottom: 14px;
+}
+
+/* Appointment Card - Clean modern design with subtle gradient */
+.pwa-appointment-card {
+    background: linear-gradient(135deg, #ffffff 0%, #ffffff 60%, #f8faff 80%, #f0f5ff 100%);
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    position: relative;
+    overflow: hidden;
+}
+
+.appointment-main {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    position: relative;
+    min-height: 140px;
+    padding-right: 100px;
+}
+
+.appointment-info {
+    flex: 1;
+    z-index: 2;
+}
+
+.appointment-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.appointment-header .calendar-icon {
+    font-size: 1.1rem;
+    filter: grayscale(0.3) brightness(1.1);
+}
+
+.appointment-header h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin: 0;
+}
+
+.doctor-specialty {
+    font-size: 0.9rem;
+    color: #555;
+    margin: 4px 0;
+}
+
+.hospital-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #666;
+    margin: 8px 0;
+}
+
+.hospital-name .location-icon {
+    font-size: 0.9rem;
+}
+
+.appointment-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.btn-reschedule {
+    padding: 12px 28px;
+    background: #4a90d9;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s, background 0.2s;
+}
+
+.btn-reschedule:hover {
+    background: #3a7bc8;
+}
+
+.btn-reschedule:active {
+    transform: scale(0.98);
+}
+
+.btn-details {
+    padding: 12px 16px;
+    background: transparent;
+    color: #555;
+    border: 1px solid #ddd;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    cursor: pointer;
+}
+
+/* Doctor Illustration - Clean, modern integrated design */
+.appointment-image {
+    width: 115px;
+    height: 140px;
+    flex-shrink: 0;
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    overflow: visible;
+}
+
+.appointment-image::before {
+    content: '';
+    position: absolute;
+    top: 5%;
+    left: -20px;
+    width: 130%;
+    height: 95%;
+    background: radial-gradient(
+        ellipse 70% 70% at 60% 50%,
+        rgba(224, 235, 255, 0.7) 0%,
+        rgba(235, 242, 255, 0.4) 40%,
+        transparent 70%
+    );
+    border-radius: 50%;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.appointment-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    position: relative;
+    z-index: 1;
+    filter: drop-shadow(0 2px 8px rgba(74, 125, 252, 0.12));
+    -webkit-mask-image: radial-gradient(ellipse 95% 90% at 50% 50%, black 60%, transparent 100%);
+    mask-image: radial-gradient(ellipse 95% 90% at 50% 50%, black 60%, transparent 100%);
+}
+
+.no-appointment {
+    text-align: center;
+    padding: 30px 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.no-appointment-illustration {
+    width: 120px;
+    height: 120px;
+    margin-bottom: 16px;
+}
+
+.no-appointment-illustration img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.no-appointment p {
+    color: #888;
+    margin-bottom: 16px;
+    font-size: 0.95rem;
+}
+
+.btn-book {
+    padding: 12px 30px;
+    background: #4a90d9;
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Quick Actions Grid - Like Reference */
+.pwa-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.quick-action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 14px 6px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.quick-action-card:active {
+    transform: scale(0.95);
+}
+
+.action-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+.action-icon.book {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.action-icon.records {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.action-icon.emergency {
+    background: #ffebee;
+    color: #d32f2f;
+}
+
+.action-icon.queue {
+    background: #e8eaf6;
+    color: #3f51b5;
+}
+
+.quick-action-card span {
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: #333;
+    text-align: center;
+    line-height: 1.3;
+}
+
+/* Doctor Banner */
+.pwa-doctor-banner {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 16px;
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.doctor-banner-icon {
+    width: 36px;
+    height: 36px;
+    background: #e3f2fd;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #1976d2;
+}
+
+.doctor-banner-info {
+    flex: 1;
+}
+
+.doctor-banner-info span {
+    font-weight: 500;
+    color: #333;
+}
+
+.doctor-banner-rating span {
+    color: #888;
+    font-size: 0.9rem;
+}
+
+/* Map Container */
+.pwa-map-container {
+    margin-bottom: 16px;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Hospital List */
+.pwa-hospital-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.pwa-hospital-card {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.hospital-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.hospital-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.hospital-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.hospital-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1a1a2e;
+    margin: 0 0 4px 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hospital-rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 4px;
+}
+
+.hospital-rating .stars {
+    color: #ffc107;
+    font-size: 0.85rem;
+}
+
+.hospital-rating .rating-value {
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.hospital-hours {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.open-badge {
+    color: #28a745;
+}
+
+.hospital-phone {
+    font-size: 0.85rem;
+    color: #4a7dfc;
+    text-decoration: none;
+}
+
+.hospital-distance {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.distance-badge {
+    font-size: 0.8rem;
+    color: #28a745;
+    font-weight: 500;
+}
+
+.hospital-id {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+/* Floating Action Buttons - REMOVED */
+
+/* Bottom Navigation */
+.pwa-bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 12px 16px 20px;
+    background: white;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    border-radius: 20px 20px 0 0;
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #888;
+    transition: color 0.2s;
+}
+
+.nav-item.active {
+    color: #4a7dfc;
+}
+
+.nav-item span {
+    font-size: 0.7rem;
+    font-weight: 500;
+    max-width: 70px;
+    text-align: center;
+    line-height: 1.2;
+    font-weight: 500;
+}
+
+/* Embedded SOS Button in Bottom Nav */
+.sos-nav-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    position: relative;
+    margin-top: -30px;
+}
+
+.sos-nav-button {
+    width: 56px;
+    height: 56px;
+    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+    color: white;
+    border: 4px solid white;
+    border-radius: 50%;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sos-nav-button:active {
+    transform: scale(0.95);
+}
+
+.sos-nav-label {
+    font-size: 0.7rem;
+    color: #dc3545;
+    font-weight: 500;
+}
+
+/* Appointment History Styles */
+.pwa-history-content {
+    padding-top: 8px;
+}
+
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.history-card {
+    display: flex;
+    gap: 16px;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    align-items: center;
+}
+
+.history-date {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    background: #f0f4ff;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.history-date .date-day {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #4a7dfc;
+    line-height: 1;
+}
+
+.history-date .date-month {
+    font-size: 0.7rem;
+    color: #4a7dfc;
+    text-transform: uppercase;
+}
+
+.history-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.history-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+    color: #1a1a2e;
+}
+
+.history-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.history-reason {
+    font-size: 0.8rem !important;
+    color: #888 !important;
+    margin-top: 4px !important;
+}
+
+.history-status {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: white;
+    flex-shrink: 0;
+}
+
+.no-history,
+.no-records {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    text-align: center;
+    color: #888;
+}
+
+.no-history svg,
+.no-records svg {
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.no-history p,
+.no-records p {
+    font-size: 1rem;
+    margin-bottom: 20px;
+}
+
+.no-history button,
+.no-records button {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #4a7dfc 0%, #5995fd 100%);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+/* Records Styles */
+.pwa-records-content {
+    padding-top: 8px;
+}
+
+.records-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.record-item {
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    align-items: center;
+}
+
+.record-item .record-icon {
+    width: 48px;
+    height: 48px;
+    background: #f0f4ff;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.record-item .record-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.record-item .record-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 1rem;
+    color: #1a1a2e;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.record-item .record-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #666;
+}
+
+.record-item .record-date {
+    font-size: 0.75rem;
+    color: #888;
+}
+
+.view-record-btn {
+    padding: 8px 16px;
+    background: #4a7dfc;
+    color: white;
+    text-decoration: none;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+/* Loading State */
+.pwa-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 40px;
+    color: #888;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 360px) {
+    .pwa-quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .quick-action-card {
+        padding: 12px 8px;
+    }
+    
+    .nav-item span {
+        font-size: 0.65rem;
+    }
+}
+
+@media (min-width: 768px) {
+    .pwa-app {
+        max-width: 480px;
+        margin: 0 auto;
+        box-shadow: 0 0 30px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Safe area padding for notched phones */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    .pwa-bottom-nav {
+        padding-bottom: calc(20px + env(safe-area-inset-bottom));
+    }
+    
+    .pwa-main {
+        padding-bottom: calc(100px + env(safe-area-inset-bottom));
+    }
+}
+
+/* Smooth transitions */
+* {
+    -webkit-tap-highlight-color: transparent;
+}
+
+button, a {
+    touch-action: manipulation;
+}
+
+/* Hide the EmergencyWidget floating elements in PWA - only show modals */
+.pwa-app .emergency-widget {
+    position: static !important;
+    bottom: auto !important;
+    right: auto !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+.pwa-app .emergency-widget > .sos-button {
+    display: none !important;
+}
+
+/* Position the active emergency tracker properly in PWA */
+.pwa-app .emergency-widget .active-emergency-tracker {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    right: auto !important;
+    bottom: auto !important;
+    width: 90vw !important;
+    max-width: 350px !important;
+    z-index: 1001 !important;
+}

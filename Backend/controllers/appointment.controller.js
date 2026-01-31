@@ -108,7 +108,7 @@ export const getLatestAppointment = async (req, res) => {
         })
         .sort({ createdAt: -1 }) // Get the most recently created one
         .populate('hospitalId', 'name') // Get the full hospital object (just the name)
-        .populate('doctorId', 'name');   // Get the full doctor object (just the name)
+        .populate('doctorId', 'name designation gender');   // Get the full doctor object
 
         // It's okay if no appointment is found, just return null
         if (!latestAppointment) {
@@ -148,6 +148,25 @@ export const getTodaysHospitalAppointments = async (req, res) => {
         })
         .sort({ appointmentNumber: 1 })
         .populate('doctorId', 'name');
+
+        res.json(appointments);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};
+
+// --- NEW FUNCTION: Get appointment history for a patient ---
+export const getAppointmentHistory = async (req, res) => {
+    const patientId = req.user.id;
+
+    try {
+        const appointments = await Appointment.find({
+            patientId: patientId
+        })
+        .sort({ createdAt: -1 }) // Most recent first
+        .limit(50) // Limit to last 50 appointments
+        .populate('hospitalId', 'name')
+        .populate('doctorId', 'name designation gender');
 
         res.json(appointments);
     } catch (error) {

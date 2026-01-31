@@ -9,7 +9,7 @@ const generateToken = (id) => {
 };
 
 export const registerUser = async (req, res) => {
-  const { name, email, password, phone, role, hospitalName, designation } = req.body;
+  const { name, email, password, phone, role, hospitalName, designation, gender } = req.body;
 
   if (!name || !email || !password || !phone || !role) {
     return res.status(400).json({ message: 'Please provide all required fields.' });
@@ -31,12 +31,16 @@ export const registerUser = async (req, res) => {
       }
       userData.hospitalName = hospitalName;
 
-      // Designation is only required for doctors.
+      // Designation and gender are only required for doctors.
       if (role === 'doctor') {
         if (!designation) {
           return res.status(400).json({ message: 'Designation is required for doctors.' });
         }
+        if (!gender) {
+          return res.status(400).json({ message: 'Gender is required for doctors.' });
+        }
         userData.designation = designation;
+        userData.gender = gender;
       }
     }
 
@@ -77,6 +81,10 @@ export const loginUser = async (req, res) => {
       // If user is staff, include hospitalName in the response
       if (user.role === 'doctor' || user.role === 'helpdesk') {
         responsePayload.hospitalName = user.hospitalName;
+      }
+      // If user is a doctor, include gender in the response
+      if (user.role === 'doctor') {
+        responsePayload.gender = user.gender;
       }
 
       res.json(responsePayload);

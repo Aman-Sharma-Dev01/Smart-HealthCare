@@ -59,7 +59,8 @@ const Login = () => {
         phone: '',
         password: '',
         hospitalName: '',
-        designation: ''
+        designation: '',
+        gender: ''
     });
 
     const [loading, setLoading] = useState(false);
@@ -83,6 +84,7 @@ const Login = () => {
             ...prevData,
             hospitalName: newRole === 'patient' ? '' : prevData.hospitalName,
             designation: newRole !== 'doctor' ? '' : prevData.designation,
+            gender: newRole !== 'doctor' ? '' : prevData.gender,
         }));
     };
 
@@ -132,6 +134,7 @@ const Login = () => {
         }
         if (role === 'doctor') {
             payload.designation = registerData.designation;
+            payload.gender = registerData.gender;
         }
 
         try {
@@ -160,7 +163,7 @@ const Login = () => {
                 <div className="auth-header">
                     <img
                         src="/36cc9f43-2946-4fc0-a653-e9ce37b830fb.png"
-                        alt="MediCare+ Logo"
+                        alt="Medicare+ Logo"
                         className="auth-logo"
                     />
                 </div>
@@ -168,7 +171,7 @@ const Login = () => {
                 <div className={`auth-form-container ${isLoginView ? 'active' : ''}`}>
                     <form onSubmit={handleLoginSubmit} className="auth-form">
                         <h2 className="form-title">Welcome Back</h2>
-                        <p className="form-subtitle">Sign in to continue to MediCare+</p>
+                        <p className="form-subtitle">Sign in to continue to Medicare+</p>
                         {error && isLoginView && <p className="error-message">{error}</p>}
 
                         <div className="input-group">
@@ -249,6 +252,21 @@ const Login = () => {
                                     onChange={handleRegisterChange} 
                                     value={registerData.designation} 
                                     required={role === 'doctor'}/>
+                            </div>
+                        </div>
+                        <div className={`conditional-field ${role === 'doctor' ? 'visible' : ''}`}>
+                            <div className="input-group">
+                                <label htmlFor="gender">Gender</label>
+                                <select 
+                                    id="gender" 
+                                    name="gender" 
+                                    onChange={handleRegisterChange} 
+                                    value={registerData.gender} 
+                                    required={role === 'doctor'}>
+                                    <option value="">Select gender...</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                </select>
                             </div>
                         </div>
 

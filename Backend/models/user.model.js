@@ -19,6 +19,11 @@ const userSchema = new mongoose.Schema({
   designation: {
     type: String,
     required: function() { return this.role === 'doctor'; }
+  },
+  gender: {
+    type: String,
+    enum: ['male', 'female'],
+    required: function() { return this.role === 'doctor'; }
   }
 }, { timestamps: true });
 
