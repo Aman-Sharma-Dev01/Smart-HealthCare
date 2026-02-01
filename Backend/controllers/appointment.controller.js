@@ -173,3 +173,138 @@ export const getAppointmentHistory = async (req, res) => {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }
 };
+
+// --- Book appointment for a specific date ---
+export const bookAppointmentForDate = async (req, res) => {
+    const { hospitalId, doctorId, reasonForVisit, symptoms, date } = req.body;
+    const patientId = req.user.id;
+
+    try {
+        const patient = await User.findById(patientId);
+        if (!patient) return res.status(404).json({ message: 'Patient not found' });
+
+        const appointmentDate = date || new Date().toISOString().slice(0, 10);
+        let queue = await Queue.findOne({ doctorId, date: appointmentDate });
+        if (!queue) {
+            queue = new Queue({ hospitalId, doctorId, date: appointmentDate });
+        }
+
+        const newAppointmentNumber = queue.lastAppointmentNumber + 1;
+        queue.lastAppointmentNumber = newAppointmentNumber;
+
+        const appointment = new Appointment({
+            patientId, doctorId, hospitalId, appointmentNumber: newAppointmentNumber,
+            reasonForVisit, symptoms, patientName: patient.name, patientPhone: patient.phone,
+            scheduledDate: appointmentDate
+        });
+
+        queue.appointments.push(appointment._id);
+        await appointment.save();
+        await queue.save();
+
+        await emitQueueUpdate(req, queue._id);
+
+        res.status(201).json(appointment);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};
+
+// --- Get appointment details by ID ---
+export const getAppointmentDetails = async (req, res) => {
+    const { appointmentId } = req.params;
+
+    try {
+        const appointment = await Appointment.findById(appointmentId)
+            .populate('hospitalId', 'name')
+            .populate('doctorId', 'name designation gender');
+
+        if (!appointment) {
+            return res.status(404).json({ message: 'Appointment not found' });
+        }
+
+        res.json(appointment);
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};
+
+// --- Mark appointment status (Completed, No-Show, etc.) ---
+export const markAppointmentStatus = async (req, res) => {
+    const { appointmentId } = req.params;
+    const { status } = req.body;
+
+    try {
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            return res.status(404).json({ message: 'Appointment not found' });
+        }
+
+        appointment.status = status;
+        await appointment.save();
+
+        res.json({ message: 'Appointment status updated.', appointment });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};
+
+// --- Reschedule an appointment ---
+export const rescheduleAppointment = async (req, res) => {
+    const { appointmentId } = req.params;
+    const { newDate } = req.body;
+
+    try {
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            return res.status(404).json({ message: 'Appointment not found' });
+        }
+
+        appointment.scheduledDate = newDate;
+        appointment.status = 'Scheduled';
+        await appointment.save();
+
+        res.json({ message: 'Appointment rescheduled.', appointment });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};
+
+// --- Cancel an appointment ---
+export const cancelAppointment = async (req, res) => {
+    const { appointmentId } = req.params;
+
+    try {
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            return res.status(404).json({ message: 'Appointment not found' });
+        }
+
+        appointment.status = 'Cancelled';
+        await appointment.save();
+
+        res.json({ message: 'Appointment cancelled.', appointment });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};
+
+// --- Submit feedback for an appointment ---
+export const submitFeedback = async (req, res) => {
+    const { appointmentId } = req.params;
+    const { rating, comment } = req.body;
+
+    try {
+        const appointment = await Appointment.findById(appointmentId);
+        if (!appointment) {
+            return res.status(404).json({ message: 'Appointment not found' });
+        }
+
+        appointment.feedback = { rating, comment, submittedAt: new Date() };
+        await appointment.save();
+
+        res.json({ message: 'Feedback submitted.', appointment });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};
