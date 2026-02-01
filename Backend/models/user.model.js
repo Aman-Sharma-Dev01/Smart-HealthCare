@@ -24,6 +24,19 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['male', 'female'],
     required: function() { return this.role === 'doctor'; }
+  },
+  // Doctor-specific fields
+  isOnline: {
+    type: Boolean,
+    default: false
+  },
+  isTodayAvailable: {
+    type: Boolean,
+    default: false
+  },
+  availableDates: {
+    type: [Date],
+    default: []
   }
 }, { timestamps: true });
 
