@@ -24,37 +24,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     enum: ['male', 'female'],
     required: function() { return this.role === 'doctor'; }
-  },
-  // Doctor-specific profile fields
-  profileCompleted: {
-    type: Boolean,
-    default: false
-  },
-  specialization: { type: String },
-  experience: { type: Number }, // Years of experience
-  education: { type: String },
-  consultationFee: { type: Number },
-  bio: { type: String },
-  languages: [{ type: String }],
-  profileImage: { type: String },
-  // Doctor availability settings
-  isOnline: {
-    type: Boolean,
-    default: false
-  },
-  isAvailableToday: {
-    type: Boolean,
-    default: false
-  },
-  availableDates: [{ type: String }], // Array of YYYY-MM-DD strings
-  // Doctor rating and feedback
-  averageRating: {
-    type: Number,
-    default: 0
-  },
-  totalReviews: {
-    type: Number,
-    default: 0
   }
 }, { timestamps: true });
 

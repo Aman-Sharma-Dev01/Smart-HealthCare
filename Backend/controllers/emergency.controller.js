@@ -89,8 +89,8 @@ export const manageEmergency = async (req, res) => {
     }
 
     // Get helpdesk user info to find hospital name
-    const helpdeskUser = await User.findById(helpdeskId).populate('hospitalId', 'name');
-    const hospitalName = helpdeskUser?.hospitalId?.name || 'Hospital';
+    const helpdeskUser = await User.findById(helpdeskId);
+    const hospitalName = helpdeskUser?.hospitalName || 'Hospital';
 
     // --- THIS IS THE FIX ---
     // 1. Automatically update the status to 'acknowledged'.
