@@ -53,7 +53,7 @@ export const checkProfileStatus = async (req, res) => {
         res.json({
             isProfileComplete: !!(doctor.name && doctor.designation && doctor.hospitalName),
             isOnline: doctor.isOnline || false,
-            isTodayAvailable: doctor.isTodayAvailable || false,
+            isAvailableToday: doctor.isTodayAvailable || false,
             profile: doctor
         });
     } catch (error) {
@@ -121,7 +121,7 @@ export const toggleTodayAvailability = async (req, res) => {
 
         doctor.isTodayAvailable = !doctor.isTodayAvailable;
         await doctor.save();
-        res.json({ message: `Today availability: ${doctor.isTodayAvailable ? 'Available' : 'Not Available'}`, isTodayAvailable: doctor.isTodayAvailable });
+        res.json({ message: `Today availability: ${doctor.isTodayAvailable ? 'Available' : 'Not Available'}`, isAvailableToday: doctor.isTodayAvailable });
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }
@@ -135,8 +135,8 @@ export const setAvailableDates = async (req, res) => {
             return res.status(403).json({ message: 'Access denied. Doctors only.' });
         }
 
-        const { availableDates } = req.body;
-        doctor.availableDates = availableDates || [];
+        const { dates } = req.body;
+        doctor.availableDates = dates || [];
         await doctor.save();
         res.json({ message: 'Available dates updated', availableDates: doctor.availableDates });
     } catch (error) {
