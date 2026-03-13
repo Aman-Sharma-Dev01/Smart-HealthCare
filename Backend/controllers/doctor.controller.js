@@ -36,7 +36,7 @@ export const getDoctorsByHospital = async (req, res) => {
         const doctors = await User.find({
             role: 'doctor',
             hospitalName: hospitalName
-        }).select('name designation gender'); // Send only public info including gender
+        }).select('name designation gender isOnline isTodayAvailable'); // Send public info + availability
         res.json(doctors);
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
@@ -148,11 +148,15 @@ export const setAvailableDates = async (req, res) => {
 export const getAvailableDates = async (req, res) => {
     try {
         const { doctorId } = req.params;
-        const doctor = await User.findById(doctorId).select('availableDates name');
+        const doctor = await User.findById(doctorId).select('availableDates name isOnline isTodayAvailable role');
         if (!doctor || doctor.role !== 'doctor') {
             return res.status(404).json({ message: 'Doctor not found' });
         }
-        res.json({ availableDates: doctor.availableDates || [] });
+        res.json({
+            availableDates: doctor.availableDates || [],
+            isOnline: doctor.isOnline || false,
+            isAvailableToday: doctor.isTodayAvailable || false
+        });
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }
