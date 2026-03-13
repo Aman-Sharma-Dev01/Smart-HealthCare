@@ -3,13 +3,14 @@ import './ChatBot.css';
 import { MessageCircle } from 'lucide-react'; // You can replace with any icon
 import { BACKEND_API_URL } from '../../util';
 
-const ChatBot = ({ isPWAView = false }) => {
+const ChatBot = ({ isPWAView = false, embedded = false }) => {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [chat, setChat] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const toggleChat = () => setOpen(!open);
+  const isChatOpen = embedded || open;
 
   const sendMessage = async () => {
     if (!input.trim()) return;
@@ -44,16 +45,18 @@ const ChatBot = ({ isPWAView = false }) => {
   return (
     <>
       {/* Floating Chat Icon */}
-      <div className={`chat-icon ${isPWAView ? 'pwa-chat-icon' : ''}`} onClick={toggleChat}>
-        <MessageCircle size={28} color="white" />
-      </div>
+      {!embedded && (
+        <div className={`chat-icon ${isPWAView ? 'pwa-chat-icon' : ''}`} onClick={toggleChat}>
+          <MessageCircle size={28} color="white" />
+        </div>
+      )}
 
       {/* Chat Window */}
-      {open && (
-        <div className={`chat-container ${isPWAView ? 'pwa-chat-container' : ''}`}>
+      {isChatOpen && (
+        <div className={`chat-container ${isPWAView ? 'pwa-chat-container' : ''} ${embedded ? 'embedded-chat' : ''}`}>
           <div className="chat-header">
             <span>💬 AI Health Assistant</span>
-            <button onClick={toggleChat}>×</button>
+            {!embedded && <button onClick={toggleChat}>×</button>}
           </div>
 
           <div className="chat-messages">
