@@ -14,7 +14,6 @@ import ChatBot from './Components/Chatbot/ChatBot';
 import InstallPWA from './Components/InstallPWA/InstallPWA';
 import PWAApp from './Components/PWAApp/PWAApp';
 
-
 // Detect if app is running as standalone PWA
 const isStandalonePWA = () => {
   return (

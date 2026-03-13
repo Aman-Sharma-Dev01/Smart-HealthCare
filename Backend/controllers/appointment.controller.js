@@ -300,7 +300,7 @@ export const submitFeedback = async (req, res) => {
             return res.status(404).json({ message: 'Appointment not found' });
         }
 
-        appointment.feedback = { rating, comment, submittedAt: new Date() };
+        appointment.feedback = { rating, comment, createdAt: new Date() };
         await appointment.save();
 
         res.json({ message: 'Feedback submitted.', appointment });

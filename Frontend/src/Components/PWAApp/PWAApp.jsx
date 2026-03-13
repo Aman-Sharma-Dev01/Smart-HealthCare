@@ -4,6 +4,7 @@ import { GoogleMap, useJsApiLoader, Marker, InfoWindow } from '@react-google-map
 import './PWAApp.css';
 import { BACKEND_API_URL } from '../../util';
 import EmergencyWidget from '../EmergencyWidget/EmergencyWidget';
+import LiveQueueWidget from '../LiveQueueWidget/LiveQueueWidget';
 
 const API_KEY = import.meta.env.VITE_MAP_API;
 const LIBRARIES = ['places'];
@@ -20,6 +21,15 @@ const PWAApp = () => {
     const [currentPosition, setCurrentPosition] = useState(null);
     const [selectedHospital, setSelectedHospital] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [feedbackForm, setFeedbackForm] = useState({
+        appointmentId: null,
+        doctorName: '',
+        rating: 0,
+        comment: ''
+    });
+    const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
+    const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
+    const [feedbackError, setFeedbackError] = useState('');
     
     const token = localStorage.getItem('token');
 
@@ -128,6 +138,73 @@ const PWAApp = () => {
 
     const handleQueueClick = () => {
         window.dispatchEvent(new CustomEvent('openQueueWidget'));
+    };
+
+    const openFeedbackModal = (appointment) => {
+        setFeedbackError('');
+        setFeedbackForm({
+            appointmentId: appointment._id,
+            doctorName: appointment.doctorId?.name || 'Doctor',
+            rating: appointment.feedback?.rating || 0,
+            comment: appointment.feedback?.comment || ''
+        });
+        setIsFeedbackModalOpen(true);
+    };
+
+    const closeFeedbackModal = () => {
+        if (isSubmittingFeedback) return;
+        setIsFeedbackModalOpen(false);
+        setFeedbackError('');
+        setFeedbackForm({ appointmentId: null, doctorName: '', rating: 0, comment: '' });
+    };
+
+    const handleFeedbackSubmit = async (e) => {
+        e.preventDefault();
+        if (!feedbackForm.appointmentId || !token) {
+            setFeedbackError('Unable to submit feedback right now.');
+            return;
+        }
+        if (!feedbackForm.rating) {
+            setFeedbackError('Please select a rating.');
+            return;
+        }
+
+        setIsSubmittingFeedback(true);
+        setFeedbackError('');
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/appointments/${feedbackForm.appointmentId}/feedback`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    rating: feedbackForm.rating,
+                    comment: feedbackForm.comment.trim()
+                })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data?.message || 'Failed to submit feedback.');
+            }
+
+            const updatedAppointment = data.appointment;
+            setAppointmentHistory((prev) =>
+                prev.map((appt) => (appt._id === updatedAppointment._id ? updatedAppointment : appt))
+            );
+
+            if (latestAppointment?._id === updatedAppointment._id) {
+                setLatestAppointment(updatedAppointment);
+            }
+
+            closeFeedbackModal();
+        } catch (error) {
+            setFeedbackError(error.message || 'Failed to submit feedback.');
+        } finally {
+            setIsSubmittingFeedback(false);
+        }
     };
 
     const formatDate = (dateString) => {
@@ -413,6 +490,21 @@ const PWAApp = () => {
                                 <h4>Dr. {appt.doctorId?.name || 'Unknown'}</h4>
                                 <p>{appt.hospitalId?.name || 'Hospital'}</p>
                                 <p className="history-reason">{appt.reasonForVisit || 'General Checkup'}</p>
+                                <div className="history-feedback-row">
+                                    {appt.feedback?.rating ? (
+                                        <span className="history-feedback-done">
+                                            Rated {appt.feedback.rating}/5
+                                        </span>
+                                    ) : appt.status === 'Completed' ? (
+                                        <button
+                                            type="button"
+                                            className="history-feedback-btn"
+                                            onClick={() => openFeedbackModal(appt)}
+                                        >
+                                            Give Feedback
+                                        </button>
+                                    ) : null}
+                                </div>
                             </div>
                             <div className="history-status" style={{ backgroundColor: getStatusColor(appt.status) }}>
                                 {appt.status || 'Scheduled'}
@@ -555,12 +647,58 @@ const PWAApp = () => {
     return (
         <div className="pwa-app">
             <EmergencyWidget />
+            <LiveQueueWidget />
             <Header />
             <main className="pwa-main">
                 {activeTab === 'home' && <HomeContent />}
                 {activeTab === 'history' && <AppointmentHistoryContent />}
                 {activeTab === 'records' && <RecordsContent />}
             </main>
+
+            {isFeedbackModalOpen && (
+                <div className="pwa-feedback-modal-overlay" onClick={closeFeedbackModal}>
+                    <div className="pwa-feedback-modal" onClick={(e) => e.stopPropagation()}>
+                        <h3>Rate Dr. {feedbackForm.doctorName}</h3>
+                        <p className="pwa-feedback-subtitle">Share your experience for this completed appointment.</p>
+
+                        <form onSubmit={handleFeedbackSubmit}>
+                            <div className="pwa-feedback-stars" role="radiogroup" aria-label="Appointment rating">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                    <button
+                                        key={star}
+                                        type="button"
+                                        className={`star-btn ${feedbackForm.rating >= star ? 'active' : ''}`}
+                                        onClick={() => setFeedbackForm((prev) => ({ ...prev, rating: star }))}
+                                        aria-label={`${star} star${star > 1 ? 's' : ''}`}
+                                    >
+                                        ★
+                                    </button>
+                                ))}
+                            </div>
+
+                            <textarea
+                                value={feedbackForm.comment}
+                                onChange={(e) => setFeedbackForm((prev) => ({ ...prev, comment: e.target.value }))}
+                                placeholder="Tell us what went well and what can improve..."
+                                maxLength={400}
+                                rows={4}
+                            />
+
+                            {feedbackError && <p className="pwa-feedback-error">{feedbackError}</p>}
+
+                            <div className="pwa-feedback-actions">
+                                <button type="button" className="feedback-cancel-btn" onClick={closeFeedbackModal} disabled={isSubmittingFeedback}>
+                                    Cancel
+                                </button>
+                                <button type="submit" className="feedback-submit-btn" disabled={isSubmittingFeedback}>
+                                    {isSubmittingFeedback ? 'Submitting...' : 'Submit Feedback'}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             <BottomNav />
         </div>
     );
