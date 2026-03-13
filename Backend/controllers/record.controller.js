@@ -9,9 +9,11 @@ export const uploadRecord = async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'Please upload a file' });
   }
-  // Check for upload error from middleware
-  if (req.file.cloudStorageError) {
-    return res.status(500).json({ message: 'Error uploading to cloud storage.' });
+  if (req.file.cloudinaryError) {
+    return res.status(500).json({ message: 'Error uploading to Cloudinary.' });
+  }
+  if (!req.file.cloudinaryUrl) {
+    return res.status(500).json({ message: 'Upload failed. Missing Cloudinary URL.' });
   }
 
   try {
@@ -19,7 +21,7 @@ export const uploadRecord = async (req, res) => {
       patientId,
       title,
       recordType,
-      filePath: req.file.gcsUrl, // <-- Use the public URL from GCS middleware
+      filePath: req.file.cloudinaryUrl,
     });
     res.status(201).json(newRecord);
   } catch (error) {
@@ -36,8 +38,12 @@ export const uploadRecordForPatient = async (req, res) => {
     return res.status(400).json({ message: 'Please upload a file' });
   }
   
-  if (req.file.cloudStorageError) {
-    return res.status(500).json({ message: 'Error uploading to cloud storage.' });
+  if (req.file.cloudinaryError) {
+    return res.status(500).json({ message: 'Error uploading to Cloudinary.' });
+  }
+
+  if (!req.file.cloudinaryUrl) {
+    return res.status(500).json({ message: 'Upload failed. Missing Cloudinary URL.' });
   }
 
   if (!patientId) {
@@ -55,7 +61,7 @@ export const uploadRecordForPatient = async (req, res) => {
       patientId,
       title,
       recordType,
-      filePath: req.file.gcsUrl,
+      filePath: req.file.cloudinaryUrl,
       uploadedBy: doctorId,
     });
 

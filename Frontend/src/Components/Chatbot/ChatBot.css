@@ -1,8 +1,8 @@
 /* Floating Chat Icon */
 .chat-icon {
   position: fixed;
-  bottom: 25px;
-  right: 25px;
+  bottom: 24px;
+  right: 20px;
   background-color: #0077ff;
   width: 60px;
   height: 60px;
@@ -18,8 +18,8 @@
 /* Chat Window */
 .chat-container {
   position: fixed;
-  bottom: 100px;
-  right: 25px;
+  bottom: 94px;
+  right: 20px;
   width: 350px;
   background: #f4f4ff;
   border-radius: 12px;
@@ -28,6 +28,17 @@
   flex-direction: column;
   z-index: 1001;
   overflow: hidden;
+}
+
+.pwa-chat-icon {
+  bottom: calc(24px + env(safe-area-inset-bottom));
+  right: 16px;
+}
+
+.pwa-chat-container {
+  bottom: calc(90px + env(safe-area-inset-bottom));
+  right: 16px;
+  width: min(360px, calc(100vw - 32px));
 }
 
 .chat-header {
@@ -146,5 +157,19 @@
     padding: 0.75rem 1.25rem;
     border-radius: 12px;
     font-weight: 500;
+  }
+
+  .chat-icon.pwa-chat-icon {
+    bottom: calc(24px + env(safe-area-inset-bottom));
+    right: 16px;
+  }
+
+  .chat-container.pwa-chat-container {
+    left: auto;
+    right: 16px;
+    bottom: calc(92px + env(safe-area-inset-bottom));
+    width: min(360px, calc(100vw - 32px));
+    max-height: calc(72vh - env(safe-area-inset-top));
+    border-radius: 16px;
   }
 }

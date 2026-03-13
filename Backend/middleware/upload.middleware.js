@@ -1,22 +1,14 @@
 import multer from 'multer';
-import { Storage } from '@google-cloud/storage';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { v2 as cloudinary } from 'cloudinary';
 
-// --- Google Cloud Storage Configuration ---
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const storage = new Storage({
-  keyFilename: path.join(__dirname, '..', 'gcs-credentials.json'),
-  projectId: 'alpine-aspect-459412-p7', // Replace with your Google Cloud Project ID
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const bucketName = 'healthcare-app-report'; // Replace with your GCS bucket name
-const bucket = storage.bucket(bucketName);
-
 // --- Multer Configuration ---
-// We use memoryStorage to temporarily hold the file before uploading to GCS
+// Keep uploads in memory before streaming to Cloudinary
 const multerStorage = multer.memoryStorage();
 
 const multerUpload = multer({
@@ -27,38 +19,48 @@ const multerUpload = multer({
 });
 
 /**
- * Middleware to upload a file to Google Cloud Storage.
+ * Middleware to upload a file to Cloudinary.
  * This should be placed after multerUpload.single('fieldname').
  */
-const uploadToGCS = (req, res, next) => {
+const uploadToCloudinary = (req, res, next) => {
   if (!req.file) {
-    return next(); // If no file, skip to the next middleware
+    return next();
   }
 
-  const gcsFileName = `${Date.now()}-${req.file.originalname}`;
-  const file = bucket.file(gcsFileName);
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    req.file.cloudinaryError = new Error('Cloudinary environment variables are missing.');
+    req.file.cloudStorageError = req.file.cloudinaryError;
+    return next();
+  }
 
-  const stream = file.createWriteStream({
-    metadata: {
-      contentType: req.file.mimetype,
+  const folder = process.env.CLOUDINARY_FOLDER || 'patient-vault';
+
+  const uploadStream = cloudinary.uploader.upload_stream(
+    {
+      folder,
+      resource_type: 'auto',
+      public_id: `${Date.now()}-${req.file.originalname.replace(/\s+/g, '-')}`,
+      use_filename: false,
+      unique_filename: true,
+      overwrite: false,
     },
-    resumable: false,
-  });
+    (error, result) => {
+      if (error) {
+        req.file.cloudinaryError = error;
+        req.file.cloudStorageError = error;
+        return next();
+      }
 
-  stream.on('error', (err) => {
-    req.file.cloudStorageError = err;
-    next(err);
-  });
+      req.file.cloudinaryUrl = result?.secure_url;
+      req.file.cloudinaryPublicId = result?.public_id;
+      req.file.gcsUrl = result?.secure_url;
+      return next();
+    }
+  );
 
-  stream.on('finish', () => {
-    // Make the file public and get its URL
-    file.makePublic().then(() => {
-      req.file.gcsUrl = `https://storage.googleapis.com/${bucketName}/${gcsFileName}`;
-      next();
-    });
-  });
-
-  stream.end(req.file.buffer);
+    uploadStream.end(req.file.buffer);
 };
 
-export { multerUpload, uploadToGCS };
+  const uploadToGCS = uploadToCloudinary;
+
+  export { multerUpload, uploadToCloudinary, uploadToGCS };

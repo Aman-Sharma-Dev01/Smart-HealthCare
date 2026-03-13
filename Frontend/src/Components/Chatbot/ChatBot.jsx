@@ -3,7 +3,7 @@ import './ChatBot.css';
 import { MessageCircle } from 'lucide-react'; // You can replace with any icon
 import { BACKEND_API_URL } from '../../util';
 
-const ChatBot = () => {
+const ChatBot = ({ isPWAView = false }) => {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [chat, setChat] = useState([]);
@@ -26,11 +26,16 @@ const ChatBot = () => {
         body: JSON.stringify({ message: input }),
       });
 
-      const data = await res.json();
+      const raw = await res.text();
+      const data = raw ? JSON.parse(raw) : {};
+      if (!res.ok) {
+        throw new Error(data?.error || `Chat request failed (${res.status})`);
+      }
+
       const botMessage = { sender: 'bot', text: data.reply };
       setChat(prev => [...prev, botMessage]);
     } catch (error) {
-      setChat(prev => [...prev, { sender: 'bot', text: 'Failed to connect. Try again later.' }]);
+      setChat(prev => [...prev, { sender: 'bot', text: error.message || 'Failed to connect. Try again later.' }]);
     }
 
     setLoading(false);
@@ -39,13 +44,13 @@ const ChatBot = () => {
   return (
     <>
       {/* Floating Chat Icon */}
-      <div className="chat-icon" onClick={toggleChat}>
+      <div className={`chat-icon ${isPWAView ? 'pwa-chat-icon' : ''}`} onClick={toggleChat}>
         <MessageCircle size={28} color="white" />
       </div>
 
       {/* Chat Window */}
       {open && (
-        <div className="chat-container">
+        <div className={`chat-container ${isPWAView ? 'pwa-chat-container' : ''}`}>
           <div className="chat-header">
             <span>💬 AI Health Assistant</span>
             <button onClick={toggleChat}>×</button>

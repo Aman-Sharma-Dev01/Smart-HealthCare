@@ -728,6 +728,29 @@
     margin-top: 4px !important;
 }
 
+.history-actions-row {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.history-view-btn {
+    border: none;
+    border-radius: 18px;
+    padding: 8px 14px;
+    background: #dfe9ff;
+    color: #1d4ed8;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.history-view-btn:active {
+    transform: scale(0.98);
+}
+
 .history-feedback-row {
     margin-top: 10px;
 }
@@ -872,6 +895,90 @@
     justify-content: center;
     padding: 40px;
     color: #888;
+}
+
+/* History details modal */
+.pwa-history-details-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.48);
+    z-index: 1190;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.pwa-history-details-modal {
+    width: 100%;
+    max-width: 480px;
+    max-height: 85vh;
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px;
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.2);
+}
+
+.history-details-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+}
+
+.history-details-header h3 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: #1a1a2e;
+}
+
+.history-details-close-btn {
+    border: none;
+    background: #f2f4f7;
+    color: #344054;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.history-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.history-details-item {
+    border: 1px solid #e2e8f0;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.history-details-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.history-details-item .label {
+    color: #64748b;
+    font-size: 0.76rem;
+}
+
+.history-details-item .value {
+    color: #111827;
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.history-stars {
+    color: #b45309 !important;
+    letter-spacing: 1px;
 }
 
 /* Feedback modal */

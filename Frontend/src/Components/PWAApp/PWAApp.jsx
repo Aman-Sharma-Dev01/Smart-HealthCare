@@ -5,6 +5,7 @@ import './PWAApp.css';
 import { BACKEND_API_URL } from '../../util';
 import EmergencyWidget from '../EmergencyWidget/EmergencyWidget';
 import LiveQueueWidget from '../LiveQueueWidget/LiveQueueWidget';
+import ChatBot from '../Chatbot/ChatBot';
 
 const API_KEY = import.meta.env.VITE_MAP_API;
 const LIBRARIES = ['places'];
@@ -30,6 +31,8 @@ const PWAApp = () => {
     const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
     const [isSubmittingFeedback, setIsSubmittingFeedback] = useState(false);
     const [feedbackError, setFeedbackError] = useState('');
+    const [isHistoryDetailsOpen, setIsHistoryDetailsOpen] = useState(false);
+    const [selectedHistoryAppointment, setSelectedHistoryAppointment] = useState(null);
     
     const token = localStorage.getItem('token');
 
@@ -205,6 +208,21 @@ const PWAApp = () => {
         } finally {
             setIsSubmittingFeedback(false);
         }
+    };
+
+    const openHistoryDetails = (appointment) => {
+        setSelectedHistoryAppointment(appointment);
+        setIsHistoryDetailsOpen(true);
+    };
+
+    const closeHistoryDetails = () => {
+        setSelectedHistoryAppointment(null);
+        setIsHistoryDetailsOpen(false);
+    };
+
+    const getRatingStars = (rating = 0) => {
+        const normalized = Math.max(0, Math.min(5, Number(rating) || 0));
+        return `${'★'.repeat(normalized)}${'☆'.repeat(5 - normalized)}`;
     };
 
     const formatDate = (dateString) => {
@@ -490,7 +508,14 @@ const PWAApp = () => {
                                 <h4>Dr. {appt.doctorId?.name || 'Unknown'}</h4>
                                 <p>{appt.hospitalId?.name || 'Hospital'}</p>
                                 <p className="history-reason">{appt.reasonForVisit || 'General Checkup'}</p>
-                                <div className="history-feedback-row">
+                                <div className="history-actions-row">
+                                    <button
+                                        type="button"
+                                        className="history-view-btn"
+                                        onClick={() => openHistoryDetails(appt)}
+                                    >
+                                        View Details
+                                    </button>
                                     {appt.feedback?.rating ? (
                                         <span className="history-feedback-done">
                                             Rated {appt.feedback.rating}/5
@@ -619,7 +644,7 @@ const PWAApp = () => {
                         <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
-                    <span>Doctors</span>
+                    <span>Appointment History</span>
                 </button>
                 <button 
                     className={`nav-item ${activeTab === 'records' ? 'active' : ''}`}
@@ -648,12 +673,63 @@ const PWAApp = () => {
         <div className="pwa-app">
             <EmergencyWidget />
             <LiveQueueWidget />
+            <ChatBot isPWAView />
             <Header />
             <main className="pwa-main">
                 {activeTab === 'home' && <HomeContent />}
                 {activeTab === 'history' && <AppointmentHistoryContent />}
                 {activeTab === 'records' && <RecordsContent />}
             </main>
+
+            {isHistoryDetailsOpen && selectedHistoryAppointment && (
+                <div className="pwa-history-details-overlay" onClick={closeHistoryDetails}>
+                    <div className="pwa-history-details-modal" onClick={(e) => e.stopPropagation()}>
+                        <div className="history-details-header">
+                            <h3>Appointment Details</h3>
+                            <button type="button" onClick={closeHistoryDetails} className="history-details-close-btn">×</button>
+                        </div>
+
+                        <div className="history-details-grid">
+                            <div className="history-details-item">
+                                <span className="label">Doctor</span>
+                                <span className="value">Dr. {selectedHistoryAppointment.doctorId?.name || '--'}</span>
+                            </div>
+                            <div className="history-details-item">
+                                <span className="label">Specialization</span>
+                                <span className="value">{selectedHistoryAppointment.doctorId?.designation || '--'}</span>
+                            </div>
+                            <div className="history-details-item">
+                                <span className="label">Hospital</span>
+                                <span className="value">{selectedHistoryAppointment.hospitalId?.name || '--'}</span>
+                            </div>
+                            <div className="history-details-item">
+                                <span className="label">Status</span>
+                                <span className="value">{selectedHistoryAppointment.status || '--'}</span>
+                            </div>
+                            <div className="history-details-item full-width">
+                                <span className="label">Appointment Date</span>
+                                <span className="value">{selectedHistoryAppointment.appointmentDate || '--'}</span>
+                            </div>
+                            <div className="history-details-item full-width">
+                                <span className="label">Reason for Visit</span>
+                                <span className="value">{selectedHistoryAppointment.reasonForVisit || '--'}</span>
+                            </div>
+                            <div className="history-details-item full-width">
+                                <span className="label">Symptoms</span>
+                                <span className="value">{selectedHistoryAppointment.symptoms || 'Not provided'}</span>
+                            </div>
+                            <div className="history-details-item full-width">
+                                <span className="label">Rating</span>
+                                <span className="value history-stars">{getRatingStars(selectedHistoryAppointment.feedback?.rating)}</span>
+                            </div>
+                            <div className="history-details-item full-width">
+                                <span className="label">Feedback</span>
+                                <span className="value">{selectedHistoryAppointment.feedback?.comment || 'No feedback submitted.'}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {isFeedbackModalOpen && (
                 <div className="pwa-feedback-modal-overlay" onClick={closeFeedbackModal}>

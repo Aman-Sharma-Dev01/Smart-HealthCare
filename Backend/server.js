@@ -73,6 +73,17 @@ app.use('/api/doctors', doctorRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/push', pushRoutes);
 
+// Always return JSON errors for API requests.
+app.use((err, req, res, next) => {
+  console.error('Unhandled API error:', err);
+  if (res.headersSent) {
+    return next(err);
+  }
+  return res.status(err.status || 500).json({
+    message: err.message || 'Internal Server Error',
+  });
+});
+
 // --- 5. HTTP Server & Socket.IO Setup ---
 const server = http.createServer(app);
 const io = new Server(server, {

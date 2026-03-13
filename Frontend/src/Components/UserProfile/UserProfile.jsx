@@ -193,8 +193,22 @@ const UserProfile = () => {
                 headers: { 'Authorization': `Bearer ${token}` },
                 body: formData,
             });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Upload failed');
+
+            const rawBody = await response.text();
+            let data = null;
+            try {
+                data = rawBody ? JSON.parse(rawBody) : null;
+            } catch {
+                data = null;
+            }
+
+            if (!response.ok) {
+                const fallbackMessage = rawBody?.startsWith('<!DOCTYPE')
+                    ? 'Upload failed. Server returned HTML instead of JSON. Check backend deployment/env config.'
+                    : `Upload failed with status ${response.status}.`;
+                throw new Error(data?.message || fallbackMessage);
+            }
+
             showToast('Document uploaded successfully!');
             setFileToUpload(null);
             setDocumentTitle('');

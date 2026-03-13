@@ -2,9 +2,9 @@
 
 .live-queue-widget {
     position: fixed;
-    bottom: 110px !important;
-    right: 12px !important;
-    z-index: 998;
+    bottom: 166px !important;
+    right: 20px !important;
+    z-index: 1001;
 }
 
 .widget-toggle-btn {
@@ -305,8 +305,8 @@
 /* PWA Standalone Mode Adjustments */
 @media all and (display-mode: standalone) {
     .live-queue-widget {
-        bottom: calc(24px + env(safe-area-inset-bottom));
-        right: 80px;
+        bottom: calc(96px + env(safe-area-inset-bottom));
+        right: 16px;
     }
     
     .widget-toggle-btn {
