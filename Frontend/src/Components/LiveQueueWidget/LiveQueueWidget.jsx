@@ -1,82 +1,92 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './LiveQueueWidget.css';
 import { BACKEND_API_URL } from '../../util';
+import { useSocket } from '../../context/SocketContext';
 
 const LiveQueueWidget = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [appointment, setAppointment] = useState(null);
-    const [doctorRating, setDoctorRating] = useState(null);
+    const [queueStatus, setQueueStatus] = useState(null);
+    const [queueStatusMessage, setQueueStatusMessage] = useState('');
     const [user, setUser] = useState(null);
+    const [isQueueFinished, setIsQueueFinished] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
 
+    const { subscribe, joinQueueRoom, isConnected } = useSocket();
     const token = localStorage.getItem('token');
     const API_BASE_URL = BACKEND_API_URL;
 
     const appointmentAudioRef = useRef(new Audio('/appointment-alert.mp3'));
+    const hasPlayedTurnSoundRef = useRef(false);
 
-    const fetchDoctorRating = useCallback(async (doctorId) => {
+    const fetchQueueStatus = useCallback(async (doctorId) => {
         if (!token || !doctorId) {
-            setDoctorRating(null);
+            setQueueStatus(null);
+            setQueueStatusMessage('');
             return;
         }
 
         try {
-            const res = await fetch(`${API_BASE_URL}/appointments/my-history`, {
+            const res = await fetch(`${API_BASE_URL}/queues/status/${doctorId}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            if (!res.ok) {
-                setDoctorRating(null);
-                return;
+            if (res.ok) {
+                const data = await res.json();
+                setQueueStatus(data);
+                setQueueStatusMessage('');
+            } else {
+                const data = await res.json().catch(() => ({}));
+                setQueueStatus(null);
+                setQueueStatusMessage(data?.message || 'Queue is not available right now.');
             }
-
-            const history = await res.json();
-            const ratedAppointment = (history || []).find(
-                (appt) => appt?.doctorId?._id === doctorId && appt?.feedback?.rating
-            );
-
-            setDoctorRating(ratedAppointment?.feedback?.rating ?? null);
         } catch (error) {
-            console.error('Failed to fetch doctor rating:', error);
-            setDoctorRating(null);
+            console.error('Failed to fetch queue status:', error);
+            setQueueStatus(null);
+            setQueueStatusMessage('Unable to fetch queue status right now.');
         }
     }, [token, API_BASE_URL]);
 
-    // Fetch latest appointment function - made reusable
     const fetchLatestAppointment = useCallback(async () => {
         if (!token) {
             setIsLoading(false);
             setAppointment(null);
+            setQueueStatus(null);
             return;
         }
         setIsLoading(true);
+
         try {
             const res = await fetch(`${API_BASE_URL}/appointments/my-latest`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+
             if (res.ok) {
                 const data = await res.json();
                 if (data && data._id) {
                     setAppointment(data);
-                    fetchDoctorRating(data?.doctorId?._id);
+                    setIsQueueFinished(['Completed', 'Missed', 'Cancelled'].includes(data.status));
+                    fetchQueueStatus(data?.doctorId?._id);
                 } else {
                     setAppointment(null);
-                    setDoctorRating(null);
+                    setQueueStatus(null);
+                    setQueueStatusMessage('');
                 }
             } else {
                 setAppointment(null);
-                setDoctorRating(null);
+                setQueueStatus(null);
+                setQueueStatusMessage('');
             }
         } catch (error) {
             console.error("Failed to fetch latest appointment:", error);
             setAppointment(null);
-            setDoctorRating(null);
+            setQueueStatus(null);
+            setQueueStatusMessage('');
         } finally {
             setIsLoading(false);
         }
-    }, [token, API_BASE_URL, fetchDoctorRating]);
+    }, [token, API_BASE_URL, fetchQueueStatus]);
 
-    // Effect 1: Get user and fetch their latest appointment
     useEffect(() => {
         const loggedInUser = JSON.parse(localStorage.getItem('user'));
         if (loggedInUser && loggedInUser.role === 'patient') {
@@ -88,7 +98,6 @@ const LiveQueueWidget = () => {
         }
     }, [fetchLatestAppointment]);
 
-    // Effect: Listen for appointment booked event
     useEffect(() => {
         const handleAppointmentBooked = () => {
             fetchLatestAppointment();
@@ -106,7 +115,6 @@ const LiveQueueWidget = () => {
         };
     }, [fetchLatestAppointment]);
 
-    // Effect: Listen for open queue widget event (from HomePage service card)
     useEffect(() => {
         const handleOpenWidget = () => {
             fetchLatestAppointment();
@@ -119,37 +127,70 @@ const LiveQueueWidget = () => {
         };
     }, [fetchLatestAppointment]);
 
-    // Play an attention sound when opening appointment details from the action card
     useEffect(() => {
-        if (isOpen && appointment?._id) {
+        if (!queueStatus?.queueId || !isConnected) return;
+
+        joinQueueRoom(queueStatus.queueId);
+
+        const unsubscribeQueueUpdate = subscribe('queue-update', (data) => {
+            setQueueStatus((prev) => ({ ...prev, currentNumber: data.currentNumber }));
+        });
+
+        const unsubscribeStatusChange = subscribe('appointment-status-change', ({ appointmentId, status }) => {
+            if (!appointment?._id) return;
+            if (appointment._id === appointmentId && ['Completed', 'Missed', 'Cancelled'].includes(status)) {
+                setIsQueueFinished(true);
+                fetchLatestAppointment();
+            }
+        });
+
+        return () => {
+            unsubscribeQueueUpdate();
+            unsubscribeStatusChange();
+        };
+    }, [queueStatus?.queueId, isConnected, joinQueueRoom, subscribe, appointment?._id, fetchLatestAppointment]);
+
+    useEffect(() => {
+        if (!appointment || !queueStatus) return;
+
+        const isMyTurnNow = appointment.appointmentNumber === queueStatus.currentNumber;
+
+        if (queueStatus.currentNumber > appointment.appointmentNumber) {
+            setIsQueueFinished(true);
+            return;
+        }
+
+        if (isMyTurnNow && !hasPlayedTurnSoundRef.current) {
+            hasPlayedTurnSoundRef.current = true;
+            setIsOpen(true);
             appointmentAudioRef.current.play().catch(() => {});
         }
-    }, [isOpen, appointment?._id]);
+
+        if (!isMyTurnNow) {
+            hasPlayedTurnSoundRef.current = false;
+        }
+    }, [appointment, queueStatus]);
 
     if (!user) {
         return null;
     }
 
     const hasAppointment = !!(appointment && appointment._id);
-
-    const getStatusClass = (status) => {
-        const value = (status || '').toLowerCase();
-        if (value === 'completed') return 'completed';
-        if (value === 'cancelled' || value === 'missed') return 'cancelled';
-        return 'scheduled';
-    };
-
-    const ratingStars = doctorRating
-        ? `${'★'.repeat(doctorRating)}${'☆'.repeat(5 - doctorRating)}`
-        : '☆☆☆☆☆';
+    const hasActiveQueue = !!(queueStatus && queueStatus.queueId);
+    const isMyTurn = !!(hasAppointment && hasActiveQueue && appointment.appointmentNumber === queueStatus.currentNumber);
 
     return (
-        <div className={`live-queue-widget ${isOpen ? 'open' : ''}`}>
+        <div className={`live-queue-widget ${isOpen ? 'open' : ''} ${isMyTurn ? 'my-turn' : ''}`}>
             <button className="widget-toggle-btn" onClick={() => setIsOpen(!isOpen)}>
                 {isOpen ? (
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="18" y1="6" x2="6" y2="18"></line>
                         <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                ) : isMyTurn ? (
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
                     </svg>
                 ) : (
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -171,7 +212,7 @@ const LiveQueueWidget = () => {
                 {isLoading ? (
                     <div className="queue-loading-state">
                         <div className="mini-spinner"></div>
-                        <p>Loading appointment details...</p>
+                        <p>Loading queue status...</p>
                     </div>
                 ) : !hasAppointment ? (
                     <div className="no-appointment-state">
@@ -180,54 +221,34 @@ const LiveQueueWidget = () => {
                         <p>You don't have any upcoming appointments right now.</p>
                         <a href="/appointment-booking" className="book-now-btn">Book Appointment</a>
                     </div>
+                ) : isQueueFinished ? (
+                    <div className="queue-finished-message">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#28a745" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        <h4>Appointment Complete</h4>
+                        <p>Your turn has passed. There are no more active appointments for you at this time.</p>
+                    </div>
                 ) : (
                     <>
-                        <h4>Appointment Details</h4>
-
-                        <div className="details-grid">
-                            <div className="detail-box">
-                                <span className="detail-label">Doctor</span>
-                                <span className="detail-value">Dr. {appointment.doctorId?.name || '--'}</span>
+                        <h4>{isMyTurn ? "It's Your Turn Now!" : 'Live Queue Status'}</h4>
+                        <div className="queue-display">
+                            <div className="queue-box">
+                                <span className="queue-label">Currently Serving</span>
+                                <span className="queue-number current">{hasActiveQueue ? queueStatus.currentNumber : '--'}</span>
                             </div>
-                            <div className="detail-box">
-                                <span className="detail-label">Specialization</span>
-                                <span className="detail-value">{appointment.doctorId?.designation || '--'}</span>
-                            </div>
-                            <div className="detail-box">
-                                <span className="detail-label">Hospital</span>
-                                <span className="detail-value">{appointment.hospitalId?.name || '--'}</span>
-                            </div>
-                            <div className="detail-box">
-                                <span className="detail-label">Token Number</span>
-                                <span className="detail-value">#{appointment.appointmentNumber ?? '--'}</span>
-                            </div>
-                            <div className="detail-box">
-                                <span className="detail-label">Appointment Date</span>
-                                <span className="detail-value">{appointment.appointmentDate || '--'}</span>
-                            </div>
-                            <div className="detail-box full-width">
-                                <span className="detail-label">Status</span>
-                                <span className={`status-chip ${getStatusClass(appointment.status)}`}>
-                                    {appointment.status || 'Scheduled'}
-                                </span>
-                            </div>
-                            <div className="detail-box full-width">
-                                <span className="detail-label">Reason for Visit</span>
-                                <span className="detail-value">{appointment.reasonForVisit || '--'}</span>
-                            </div>
-                            <div className="detail-box full-width">
-                                <span className="detail-label">Symptoms</span>
-                                <span className="detail-value">{appointment.symptoms || 'Not provided'}</span>
-                            </div>
-                            <div className="detail-box full-width">
-                                <span className="detail-label">Your Rating</span>
-                                <span className="detail-value rating-text">{ratingStars}</span>
-                            </div>
-                            <div className="detail-box full-width">
-                                <span className="detail-label">Your Feedback</span>
-                                <span className="detail-value">{appointment.feedback?.comment || 'No feedback submitted yet.'}</span>
+                            <div className="queue-box">
+                                <span className="queue-label">Your Number</span>
+                                <span className="queue-number your">{appointment.appointmentNumber}</span>
                             </div>
                         </div>
+                        <p className="doctor-info">
+                            Dr. {appointment.doctorId?.name} at {appointment.hospitalId?.name}
+                        </p>
+                        {!hasActiveQueue && queueStatusMessage && (
+                            <p className="queue-note">{queueStatusMessage}</p>
+                        )}
                     </>
                 )}
             </div>

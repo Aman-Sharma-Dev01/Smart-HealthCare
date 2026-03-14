@@ -335,7 +335,7 @@ const PWAApp = () => {
                                     </p>
                                     <div className="appointment-actions">
                                         <button className="btn-reschedule" onClick={() => navigate('/appointment-booking')}>Reschedule</button>
-                                        <button className="btn-details" onClick={handleQueueClick}>View Details</button>
+                                        <button className="btn-details" onClick={() => openHistoryDetails(latestAppointment)}>View Details</button>
                                     </div>
                                 </div>
                                 <div className="appointment-image">
