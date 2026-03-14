@@ -275,7 +275,7 @@ function DoctorDashboard() {
                     // The response has a nested 'doctor' object
                     const doctorInfo = profileData.doctor || profileData;
                     setIsOnline(doctorInfo.isOnline || false);
-                    setIsAvailableToday(doctorInfo.isAvailableToday || false);
+                    setIsAvailableToday(doctorInfo.isTodayAvailable || doctorInfo.isAvailableToday || false);
                     // Filter out past dates
                     const now = new Date();
                     now.setHours(0, 0, 0, 0);
@@ -379,7 +379,7 @@ function DoctorDashboard() {
             });
             if (response.ok) {
                 const data = await response.json();
-                setIsAvailableToday(data.isAvailableToday);
+                setIsAvailableToday(data.isTodayAvailable ?? data.isAvailableToday ?? false);
             }
         } catch (err) {
             toast.error('Failed to toggle today availability');
@@ -396,7 +396,7 @@ function DoctorDashboard() {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ dates: newDates })
+                body: JSON.stringify({ availableDates: newDates })
             });
             if (response.ok) {
                 const data = await response.json();
@@ -423,7 +423,7 @@ function DoctorDashboard() {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ dates: newDates })
+                body: JSON.stringify({ availableDates: newDates })
             });
             if (response.ok) {
                 const data = await response.json();

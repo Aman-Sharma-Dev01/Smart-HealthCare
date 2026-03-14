@@ -106,13 +106,14 @@ const BookAppointment = () => {
                     });
                     if (response.ok) {
                         const data = await response.json();
+                        const todayAvailable = data.isTodayAvailable ?? data.isAvailableToday ?? false;
                         setAvailableDates(data.availableDates || []);
                         setDoctorAvailability({
                             isOnline: data.isOnline || false,
-                            isAvailableToday: data.isAvailableToday || false
+                            isAvailableToday: todayAvailable
                         });
                         // Default to today if available, otherwise first available date
-                        if (data.isAvailableToday) {
+                        if (todayAvailable) {
                             setSelectedDate('today');
                         } else if (data.availableDates && data.availableDates.length > 0) {
                             setSelectedDate(data.availableDates[0]);

@@ -36,7 +36,7 @@ export const getDoctorsByHospital = async (req, res) => {
         const doctors = await User.find({
             role: 'doctor',
             hospitalName: hospitalName
-        }).select('name designation gender'); // Send only public info including gender
+        }).select('name designation gender isOnline isTodayAvailable');
         res.json(doctors);
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
@@ -54,6 +54,8 @@ export const checkProfileStatus = async (req, res) => {
             isProfileComplete: !!(doctor.name && doctor.designation && doctor.hospitalName),
             isOnline: doctor.isOnline || false,
             isTodayAvailable: doctor.isTodayAvailable || false,
+            isAvailableToday: doctor.isTodayAvailable || false,
+            availableDates: doctor.availableDates || [],
             profile: doctor
         });
     } catch (error) {
@@ -121,7 +123,11 @@ export const toggleTodayAvailability = async (req, res) => {
 
         doctor.isTodayAvailable = !doctor.isTodayAvailable;
         await doctor.save();
-        res.json({ message: `Today availability: ${doctor.isTodayAvailable ? 'Available' : 'Not Available'}`, isTodayAvailable: doctor.isTodayAvailable });
+        res.json({
+            message: `Today availability: ${doctor.isTodayAvailable ? 'Available' : 'Not Available'}`,
+            isTodayAvailable: doctor.isTodayAvailable,
+            isAvailableToday: doctor.isTodayAvailable,
+        });
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }
@@ -135,8 +141,8 @@ export const setAvailableDates = async (req, res) => {
             return res.status(403).json({ message: 'Access denied. Doctors only.' });
         }
 
-        const { availableDates } = req.body;
-        doctor.availableDates = availableDates || [];
+        const datesFromClient = req.body.availableDates || req.body.dates;
+        doctor.availableDates = Array.isArray(datesFromClient) ? datesFromClient : [];
         await doctor.save();
         res.json({ message: 'Available dates updated', availableDates: doctor.availableDates });
     } catch (error) {
@@ -148,11 +154,16 @@ export const setAvailableDates = async (req, res) => {
 export const getAvailableDates = async (req, res) => {
     try {
         const { doctorId } = req.params;
-        const doctor = await User.findById(doctorId).select('availableDates name');
+        const doctor = await User.findById(doctorId).select('role availableDates isOnline isTodayAvailable');
         if (!doctor || doctor.role !== 'doctor') {
             return res.status(404).json({ message: 'Doctor not found' });
         }
-        res.json({ availableDates: doctor.availableDates || [] });
+        res.json({
+            availableDates: doctor.availableDates || [],
+            isOnline: doctor.isOnline || false,
+            isTodayAvailable: doctor.isTodayAvailable || false,
+            isAvailableToday: doctor.isTodayAvailable || false,
+        });
     } catch (error) {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }
