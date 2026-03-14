@@ -149,6 +149,13 @@ const HelpdeskDashboard = () => {
         ), [doctors, searchTerm]);
 
     const showToast = (message, type = 'success') => setToast({ show: true, message, type });
+
+    const fetchTodaysAppointments = async () => {
+        const headers = { 'Authorization': `Bearer ${token}` };
+        const appointmentsRes = await fetch(`${API_BASE_URL}/appointments/by-hospital/today`, { headers });
+        if (!appointmentsRes.ok) throw new Error('Failed to refresh appointments.');
+        setTodaysAppointments(await appointmentsRes.json());
+    };
     
     const handleOpenBookingModal = (doctor) => { setSelectedDoctor(doctor); setShowBookingModal(true); };
     const handleCloseBookingModal = () => { setShowBookingModal(false); setSelectedDoctor(null); setOfflinePatientData({ patientName: '', patientPhone: '', reasonForVisit: '' }); };
@@ -229,6 +236,31 @@ const HelpdeskDashboard = () => {
             showToast(err.message, 'error');
         } finally {
             setIsAssigningQueue(false);
+        }
+    };
+
+    const handlePromoteToFront = async (appointment) => {
+        if (!appointment?._id) return;
+
+        const doctorName = appointment?.doctorId?.name || 'this doctor';
+        const confirmed = window.confirm(
+            `Promote ${appointment.patientName} to highest priority in Dr. ${doctorName}'s queue?`
+        );
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch(`${API_BASE_URL}/queues/prioritize/${appointment._id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+            });
+
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Failed to prioritize appointment.');
+
+            await fetchTodaysAppointments();
+            showToast(data.message || 'Patient promoted to front successfully.');
+        } catch (err) {
+            showToast(err.message, 'error');
         }
     };
 
@@ -326,6 +358,15 @@ const HelpdeskDashboard = () => {
                                         <span className="appt-doctor">Dr. {appt.doctorId?.name || 'N/A'}</span>
                                     </div>
                                     <span className="appt-phone">{appt.patientPhone}</span>
+                                    {['Scheduled', 'Rescheduled'].includes(appt.status) && (
+                                        <button
+                                            type="button"
+                                            className="btn-manage"
+                                            onClick={() => handlePromoteToFront(appt)}
+                                        >
+                                            Move To Front
+                                        </button>
+                                    )}
                                 </div>
                             )) : <p>No appointments booked for today yet.</p>}
                         </div>

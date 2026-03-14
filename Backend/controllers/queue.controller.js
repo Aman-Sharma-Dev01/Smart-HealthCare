@@ -2,6 +2,7 @@ import Queue from '../models/queue.model.js';
 import Appointment from '../models/appointment.model.js';
 import User from '../models/user.model.js';
 import Hospital from '../models/hospital.model.js';
+import mongoose from 'mongoose';
 import { 
     sendYourTurnNotification, 
     sendAppointmentCompletedNotification, 
@@ -305,3 +306,113 @@ export const getQueueByDate = async (req, res) => {
       return res.status(500).json({ message: `Server Error: ${error.message}` });
     }
   };
+
+/**
+ * @desc    Promote an existing queued appointment to the front priority slot
+ * @route   PUT /api/queues/prioritize/:appointmentId
+ * @access  Protected (Helpdesk)
+ */
+export const prioritizeQueueAppointment = async (req, res) => {
+  const { appointmentId } = req.params;
+  const requesterId = req.user.id;
+  const session = await mongoose.startSession();
+
+  try {
+    const requester = await User.findById(requesterId).select('role hospitalName');
+    if (!requester || requester.role !== 'helpdesk') {
+      return res.status(403).json({ message: 'Access denied. Helpdesk only.' });
+    }
+
+    const hospital = await Hospital.findOne({ name: requester.hospitalName }).select('_id');
+    if (!hospital) {
+      return res.status(404).json({ message: 'Hospital not found.' });
+    }
+
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found.' });
+    }
+
+    if (appointment.hospitalId.toString() !== hospital._id.toString()) {
+      return res.status(403).json({ message: 'You can only prioritize appointments in your own hospital.' });
+    }
+
+    if (!['Scheduled', 'Rescheduled'].includes(appointment.status)) {
+      return res.status(400).json({ message: 'Only scheduled appointments can be prioritized.' });
+    }
+
+    const queueDate = appointment.appointmentDate || new Date().toISOString().slice(0, 10);
+    const queue = await Queue.findOne({
+      hospitalId: hospital._id,
+      doctorId: appointment.doctorId,
+      date: queueDate,
+      appointments: appointment._id,
+    });
+
+    if (!queue) {
+      return res.status(404).json({ message: 'Queue for this appointment was not found.' });
+    }
+
+    const currentToken = Number(appointment.appointmentNumber) || 0;
+    const currentServingToken = Number(queue.currentNumber) || 0;
+    const frontToken = Math.max(currentServingToken + 1, 1);
+
+    if (currentToken <= 0) {
+      return res.status(400).json({ message: 'Invalid appointment token.' });
+    }
+
+    if (currentToken <= currentServingToken) {
+      return res.status(400).json({ message: 'Appointment token has already been called or passed.' });
+    }
+
+    if (currentToken === frontToken) {
+      return res.json({
+        message: 'Appointment is already at highest available priority.',
+        appointment,
+        frontToken,
+      });
+    }
+
+    await session.withTransaction(async () => {
+      await Appointment.updateMany(
+        {
+          _id: { $in: queue.appointments, $ne: appointment._id },
+          appointmentNumber: { $gte: frontToken, $lt: currentToken },
+          status: { $in: ['Scheduled', 'Rescheduled'] },
+        },
+        { $inc: { appointmentNumber: 1 } },
+        { session }
+      );
+
+      await Appointment.updateOne(
+        { _id: appointment._id },
+        { $set: { appointmentNumber: frontToken } },
+        { session }
+      );
+    });
+
+    const updatedAppointment = await Appointment.findById(appointment._id);
+
+    const io = req.app.get('socketio');
+    const roomId = queue._id.toString();
+
+    const populatedQueue = await Queue.findById(queue._id).populate({
+      path: 'appointments',
+      select: 'patientName reasonForVisit appointmentNumber status patientPhone symptoms',
+    });
+
+    io.to(roomId).emit('new-appointment', populatedQueue);
+    io.to(roomId).emit('queue-update', { currentNumber: queue.currentNumber });
+
+    return res.json({
+      message: `Appointment moved to token #${frontToken}.`,
+      appointment: updatedAppointment,
+      frontToken,
+      queueId: queue._id,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: `Server Error: ${error.message}` });
+  } finally {
+    session.endSession();
+  }
+};
