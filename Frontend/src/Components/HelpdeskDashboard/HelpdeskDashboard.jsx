@@ -31,6 +31,9 @@ const HelpdeskDashboard = () => {
     const [showManageModal, setShowManageModal] = useState(false);
     const [selectedEmergency, setSelectedEmergency] = useState(null);
     const [manageAction, setManageAction] = useState('');
+    const [queueDoctorId, setQueueDoctorId] = useState('');
+    const [isAssigningQueue, setIsAssigningQueue] = useState(false);
+    const [liveQueuePreviewByDoctor, setLiveQueuePreviewByDoctor] = useState({});
 
     const [toast, setToast] = useState({ show: false, message: '', type: '' });
 
@@ -111,6 +114,34 @@ const HelpdeskDashboard = () => {
         return unsubscribe;
     }, [hospitalId, isConnected, joinHospitalEmergencyRoom, subscribe]);
 
+    useEffect(() => {
+        const fetchLiveQueueSnapshots = async () => {
+            if (!showManageModal || doctors.length === 0 || !token) return;
+            try {
+                const ids = doctors.map((doc) => doc._id).join(',');
+                const res = await fetch(`${API_BASE_URL}/queues/hospital/snapshots?doctorIds=${encodeURIComponent(ids)}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!res.ok) return;
+
+                const data = await res.json();
+                const map = {};
+                (data?.snapshots || []).forEach((snap) => {
+                    map[snap.doctorId] = {
+                        currentNumber: snap.currentNumber,
+                        nextPriorityToken: snap.nextPriorityToken,
+                        totalInQueue: snap.totalInQueue,
+                    };
+                });
+                setLiveQueuePreviewByDoctor(map);
+            } catch (err) {
+                console.error('Failed to fetch live queue snapshots', err);
+            }
+        };
+
+        fetchLiveQueueSnapshots();
+    }, [showManageModal, doctors, token, API_BASE_URL]);
+
     const filteredDoctors = useMemo(() =>
         doctors.filter(doc =>
             doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -122,7 +153,13 @@ const HelpdeskDashboard = () => {
     const handleOpenBookingModal = (doctor) => { setSelectedDoctor(doctor); setShowBookingModal(true); };
     const handleCloseBookingModal = () => { setShowBookingModal(false); setSelectedDoctor(null); setOfflinePatientData({ patientName: '', patientPhone: '', reasonForVisit: '' }); };
     const handleOpenManageModal = (notification) => { setSelectedEmergency(notification); setShowManageModal(true); };
-    const handleCloseManageModal = () => { setShowManageModal(false); setSelectedEmergency(null); setManageAction(''); };
+    const handleCloseManageModal = () => {
+        setShowManageModal(false);
+        setSelectedEmergency(null);
+        setManageAction('');
+        setQueueDoctorId('');
+        setIsAssigningQueue(false);
+    };
     const handleOfflineFormChange = (e) => setOfflinePatientData({ ...offlinePatientData, [e.target.name]: e.target.value });
 
     const handleOfflineBookingSubmit = async (e) => {
@@ -158,12 +195,86 @@ const HelpdeskDashboard = () => {
             
             if (!response.ok) throw new Error(data.message || 'Failed to update emergency.');
             setNotifications(prev => prev.map(n => n._id === selectedEmergency._id ? { ...n, emergencyId: data.emergency } : n));
-            showToast('Emergency updated successfully!');
+
+            if (queueDoctorId) {
+                setIsAssigningQueue(true);
+                const emergencyPatientName = selectedEmergency?.patientId?.name || 'Emergency Patient';
+                const emergencyPatientPhone = selectedEmergency?.patientId?.phone || 'N/A';
+                const severePayload = {
+                    doctorId: queueDoctorId,
+                    patientId: selectedEmergency?.patientId?._id,
+                    patientName: emergencyPatientName,
+                    patientPhone: emergencyPatientPhone,
+                    reasonForVisit: `Severe emergency: ${selectedEmergency?.emergencyId?.incidentType || 'critical case'}`,
+                    symptoms: `Emergency triage case (${selectedEmergency?.emergencyId?.emergencyType || 'self'})`,
+                };
+
+                const severeRes = await fetch(`${API_BASE_URL}/appointments/offline-booking/severe-priority`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                    body: JSON.stringify(severePayload),
+                });
+                const severeData = await severeRes.json();
+                if (!severeRes.ok) {
+                    throw new Error(severeData.message || 'Failed to assign severe patient to queue.');
+                }
+
+                setTodaysAppointments(prev => [...prev, severeData.appointment].sort((a, b) => a.appointmentNumber - b.appointmentNumber));
+                showToast(`Emergency assigned. Token #${severeData.appointment.appointmentNumber} booked.`);
+            } else {
+                showToast('Emergency updated successfully!');
+            }
             handleCloseManageModal();
         } catch (err) {
             showToast(err.message, 'error');
+        } finally {
+            setIsAssigningQueue(false);
         }
     };
+
+    const queueLoadByDoctor = useMemo(() => {
+        return todaysAppointments.reduce((acc, appt) => {
+            const doctorId = appt?.doctorId?._id || appt?.doctorId;
+            if (!doctorId) return acc;
+            if (!['Scheduled', 'Rescheduled'].includes(appt.status)) return acc;
+            acc[doctorId] = (acc[doctorId] || 0) + 1;
+            return acc;
+        }, {});
+    }, [todaysAppointments]);
+
+    const severeInsertionPreviewByDoctor = useMemo(() => {
+        const map = {};
+
+        for (const doc of doctors) {
+            const doctorAppointments = todaysAppointments
+                .filter((appt) => {
+                    const doctorId = appt?.doctorId?._id || appt?.doctorId;
+                    return doctorId === doc._id;
+                })
+                .filter((appt) => ['Scheduled', 'Rescheduled'].includes(appt.status));
+
+            if (doctorAppointments.length === 0) {
+                map[doc._id] = 1;
+                continue;
+            }
+
+            const nums = doctorAppointments
+                .map((appt) => Number(appt.appointmentNumber) || 0)
+                .filter((n) => n > 0)
+                .sort((a, b) => a - b);
+
+            if (nums.length === 0) {
+                map[doc._id] = 1;
+                continue;
+            }
+
+            // Estimate current serving as smallest scheduled token visible to helpdesk.
+            const estimatedCurrent = nums[0] - 1;
+            map[doc._id] = Math.max(estimatedCurrent + 1, 1);
+        }
+
+        return map;
+    }, [doctors, todaysAppointments]);
 
     if (isLoading) return <div className="loading-state">Loading Dashboard...</div>;
     if (error) return <div className="error-state">{error}</div>;
@@ -263,7 +374,28 @@ const HelpdeskDashboard = () => {
                                 <label htmlFor="action">Action Taken</label>
                                 <input type="text" id="action" name="action" placeholder="e.g., Ambulance dispatched" required value={manageAction} onChange={(e) => setManageAction(e.target.value)} />
                             </div>
-                            <button type="submit" className="btn-primary">Log Action</button>
+
+                            <div className="form-group">
+                                <label htmlFor="queueDoctor">Assign Severe Patient To Doctor Queue (Optional)</label>
+                                <select id="queueDoctor" value={queueDoctorId} onChange={(e) => setQueueDoctorId(e.target.value)}>
+                                    <option value="">-- Select doctor queue --</option>
+                                    {doctors.map((doc) => (
+                                        <option key={doc._id} value={doc._id}>
+                                            Dr. {doc.name} ({doc.designation}) - Queue: {liveQueuePreviewByDoctor[doc._id]?.totalInQueue || queueLoadByDoctor[doc._id] || 0} - Insert #{liveQueuePreviewByDoctor[doc._id]?.nextPriorityToken || severeInsertionPreviewByDoctor[doc._id] || 1}
+                                        </option>
+                                    ))}
+                                </select>
+                                <small className="queue-assign-note">If selected, patient will be inserted as next priority token in this doctor's queue.</small>
+                                {queueDoctorId && (
+                                    <p className="queue-preview-chip">
+                                        Severe patient will be inserted at token #{liveQueuePreviewByDoctor[queueDoctorId]?.nextPriorityToken || severeInsertionPreviewByDoctor[queueDoctorId] || 1}
+                                    </p>
+                                )}
+                            </div>
+
+                            <button type="submit" className="btn-primary" disabled={isAssigningQueue}>
+                                {isAssigningQueue ? 'Assigning...' : (queueDoctorId ? 'Log + Assign To Queue' : 'Log Action')}
+                            </button>
                         </form>
                     </div>
                 </div>

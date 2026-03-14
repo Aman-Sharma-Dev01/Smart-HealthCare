@@ -2,6 +2,7 @@ import express from 'express';
 import { 
     bookAppointment, 
     bookOfflineAppointment, 
+    bookSevereEmergencyAppointment,
     getLatestAppointment,
     getAppointmentHistory,
     getTodaysHospitalAppointments,
@@ -19,6 +20,7 @@ const router = express.Router();
 router.post('/book', protect, bookAppointment);
 router.post('/book-date', protect, bookAppointmentForDate);
 router.post('/offline-booking', protect, bookOfflineAppointment);
+router.post('/offline-booking/severe-priority', protect, bookSevereEmergencyAppointment);
 
 // @desc    Get the logged-in patient's most recent scheduled appointment
 router.get('/my-latest', protect, getLatestAppointment);

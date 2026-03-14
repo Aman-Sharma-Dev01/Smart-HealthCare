@@ -1,5 +1,7 @@
 import Queue from '../models/queue.model.js';
 import Appointment from '../models/appointment.model.js';
+import User from '../models/user.model.js';
+import Hospital from '../models/hospital.model.js';
 import { 
     sendYourTurnNotification, 
     sendAppointmentCompletedNotification, 
@@ -258,3 +260,48 @@ export const getQueueByDate = async (req, res) => {
         res.status(500).json({ message: `Server Error: ${error.message}` });
     }
 };
+
+  /**
+   * @desc    Get queue snapshots for hospital staff (helpdesk/doctor)
+   * @route   GET /api/queues/hospital/snapshots
+   * @access  Protected
+   */
+  export const getHospitalQueueSnapshots = async (req, res) => {
+    const userId = req.user.id;
+    const date = req.query.date || new Date().toISOString().slice(0, 10);
+    const doctorIds = (req.query.doctorIds || '')
+      .split(',')
+      .map((id) => id.trim())
+      .filter(Boolean);
+
+    try {
+      const user = await User.findById(userId).select('role hospitalName');
+      if (!user || (user.role !== 'helpdesk' && user.role !== 'doctor')) {
+        return res.status(403).json({ message: 'Access denied. Hospital staff only.' });
+      }
+
+      const hospital = await Hospital.findOne({ name: user.hospitalName }).select('_id');
+      if (!hospital) {
+        return res.status(404).json({ message: 'Hospital not found.' });
+      }
+
+      const query = { hospitalId: hospital._id, date };
+      if (doctorIds.length > 0) {
+        query.doctorId = { $in: doctorIds };
+      }
+
+      const queues = await Queue.find(query).select('doctorId currentNumber lastAppointmentNumber appointments');
+
+      const snapshots = queues.map((queue) => ({
+        doctorId: queue.doctorId.toString(),
+        queueId: queue._id.toString(),
+        currentNumber: queue.currentNumber || 0,
+        totalInQueue: queue.lastAppointmentNumber || 0,
+        nextPriorityToken: Math.max((queue.currentNumber || 0) + 1, 1),
+      }));
+
+      return res.json({ date, snapshots });
+    } catch (error) {
+      return res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+  };

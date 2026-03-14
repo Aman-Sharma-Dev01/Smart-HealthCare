@@ -97,6 +97,79 @@ export const bookOfflineAppointment = async (req, res) => {
     res.status(500).json({ message: `Server Error: ${error.message}` });
   }
 };
+
+// Helpdesk books a severe emergency patient with queue priority (next turn)
+export const bookSevereEmergencyAppointment = async (req, res) => {
+    const helpdeskId = req.user.id;
+    const { doctorId, patientName, patientPhone, reasonForVisit, symptoms, patientId } = req.body;
+
+    try {
+        const helpdeskUser = await User.findById(helpdeskId);
+        if (!helpdeskUser || helpdeskUser.role !== 'helpdesk') {
+            return res.status(403).json({ message: 'Access denied.' });
+        }
+
+        const doctor = await User.findById(doctorId);
+        if (!doctor || doctor.role !== 'doctor' || doctor.hospitalName !== helpdeskUser.hospitalName) {
+            return res.status(404).json({ message: 'Doctor not found in your hospital.' });
+        }
+
+        const hospital = await Hospital.findOne({ name: doctor.hospitalName });
+        if (!hospital) {
+            return res.status(404).json({ message: `Hospital named '${doctor.hospitalName}' not found.` });
+        }
+
+        const today = new Date().toISOString().slice(0, 10);
+        let queue = await Queue.findOne({ doctorId, date: today });
+        if (!queue) {
+            queue = new Queue({ hospitalId: hospital._id, doctorId, date: today, currentNumber: 0, lastAppointmentNumber: 0 });
+        }
+
+        const targetNumber = Math.max(queue.currentNumber + 1, 1);
+
+        // Shift upcoming appointment numbers to make room for the severe patient.
+        const upcomingAppointments = await Appointment.find({
+            _id: { $in: queue.appointments },
+            appointmentNumber: { $gte: targetNumber },
+            status: { $in: ['Scheduled', 'Rescheduled'] },
+        });
+
+        for (const appt of upcomingAppointments) {
+            appt.appointmentNumber += 1;
+            await appt.save();
+        }
+
+        const appointment = new Appointment({
+            patientId: patientId || undefined,
+            doctorId,
+            hospitalId: hospital._id,
+            appointmentNumber: targetNumber,
+            patientName,
+            patientPhone,
+            reasonForVisit: reasonForVisit || 'Severe emergency triage',
+            symptoms: symptoms || 'Severe case prioritized by helpdesk',
+            appointmentDate: today,
+            status: 'Scheduled',
+        });
+
+        queue.lastAppointmentNumber += 1;
+        queue.appointments.push(appointment._id);
+
+        await appointment.save();
+        await queue.save();
+
+        await emitQueueUpdate(req, queue._id);
+
+        res.status(201).json({
+            message: 'Severe emergency patient prioritized successfully.',
+            appointment,
+            queueId: queue._id,
+            queueCurrentNumber: queue.currentNumber,
+        });
+    } catch (error) {
+        res.status(500).json({ message: `Server Error: ${error.message}` });
+    }
+};
 // --- NEW FUNCTION ---
 export const getLatestAppointment = async (req, res) => {
     const patientId = req.user.id;
