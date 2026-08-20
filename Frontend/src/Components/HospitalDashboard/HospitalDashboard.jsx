@@ -356,32 +356,46 @@ function DoctorDashboard() {
 
     // Toggle online status
     const handleToggleOnline = async () => {
+        const nextValue = !isOnline;
+        setIsOnline(nextValue);
+
         try {
             const response = await fetch(`${API_BASE_URL}/doctors/profile/toggle-online`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (response.ok) {
-                const data = await response.json();
-                setIsOnline(data.isOnline);
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.message || 'Failed to toggle online status');
             }
+            const data = await response.json();
+            setIsOnline(data.isOnline ?? nextValue);
         } catch (err) {
+            setIsOnline(!nextValue);
+            console.error('Failed to toggle online status:', err);
             toast.error('Failed to toggle online status');
         }
     };
 
     // Toggle today availability
     const handleToggleToday = async () => {
+        const nextValue = !isAvailableToday;
+        setIsAvailableToday(nextValue);
+
         try {
             const response = await fetch(`${API_BASE_URL}/doctors/profile/toggle-today`, {
                 method: 'PUT',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (response.ok) {
-                const data = await response.json();
-                setIsAvailableToday(data.isTodayAvailable ?? data.isAvailableToday ?? false);
+            if (!response.ok) {
+                const data = await response.json().catch(() => ({}));
+                throw new Error(data.message || 'Failed to toggle today availability');
             }
+            const data = await response.json();
+            setIsAvailableToday(data.isTodayAvailable ?? data.isAvailableToday ?? nextValue);
         } catch (err) {
+            setIsAvailableToday(!nextValue);
+            console.error('Failed to toggle today availability:', err);
             toast.error('Failed to toggle today availability');
         }
     };
