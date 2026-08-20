@@ -13,7 +13,11 @@ export const protect = (req, res, next) => {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // Attach user to the request
-      req.user = decoded; // Contains the user id from the JWT payload
+      req.user = {
+        ...decoded,
+        id: decoded.id || decoded._id,
+        _id: decoded._id || decoded.id,
+      }; // Keep both shapes available for older cached tokens
       next();
     } catch (error) {
       console.error(error);
